@@ -1,5 +1,1 @@
 pillow==11.3.0
-python-dotenv
-langchain-core
-langchain-openai
-pytest
