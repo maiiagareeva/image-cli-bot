@@ -1,7 +1,9 @@
 import argparse, os, json
 
-from image_crop_example import center_crop_to_512
+# from image_crop_example import center_crop_to_512
+from cli.crop_send import crop_resize_512
 from pipeline import classify_image, USE_MOCK
+from pathlib import Path
 
 def main():
     #confirm current mode
@@ -23,7 +25,9 @@ def main():
         raise SystemExit(f"[app] Image not found: {args.image}")
 
     #center crop and resize to the input image
-    cropped = center_crop_to_512(args.image)
+    p = Path(args.image)
+    cropped = str(p.with_name(p.stem + "_512.png"))
+    crop_resize_512(args.image, cropped)
     print(f"[app] Cropped → {cropped}")
 
     #inference pipeline
