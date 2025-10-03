@@ -1,61 +1,53 @@
-#chat bot
-import shlex
+import json
+from pathlib import Path
+import sys
+
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+
 from crop_send import crop_resize_512
+from pipeline import classify_image, USE_MOCK
 
-BANNER = """
-  /image PATH    — crop/resize an image to 512x512 and set it as current
-  /help          — show help instructions
-  /quit          — exit
+def run_chat():
+    print(f"[chat_bot] USE_MOCK = {USE_MOCK}")
+    print("Type 'exit' to quit.\n")
 
-Set the img -> type a prompt -> it will be send back with that img
-"""
+    last_image = None
 
-def main():
-    print(BANNER)
-    current_image = None
     while True:
-        try:
-            line = input("prompt> ").strip()
-            current_image = line
-        except (EOFError, KeyboardInterrupt):
-            print("\nExiting")
+        # prompt
+        prompt = input("Enter your prompt: ").strip()
+        if prompt.lower() in ["exit", "quit"]:
+            print("[chat_bot] Goodbye!")
             break
 
-        if line == "":
+        # ask for image path
+        image_path = input("Enter image path: ").strip()
+        if image_path == "":
+            image_path = last_image
+        if not Path(image_path).exists():
+            print("[chat_bot] Invalid image path. Try again.")
             continue
+        last_image = image_path
 
-        if line in ("/quit", "/q", "/exit"):
-            print("Exiting")
-            break
+        # make the image cropped
+        p = Path(image_path)
+        cropped = str(p.with_name(p.stem + "_512.png"))
+        crop_resize_512(image_path, cropped)
+        print(f"[chat_bot] Cropped → {cropped}")
 
-        if line == "/help":
-            print(BANNER)
-            continue
+        # inference
+        out = classify_image(prompt, cropped)
+        print("\n=== MODEL OUTPUT ===")
+        print(out)
 
-        if line.startswith("/image"):
-            try:
-                parts = shlex.split(line)
-                path = parts[1]
-                new_label = path.split('.')[0]
-                resized = crop_resize_512(path, new_label + '_out.png')
-                current_image = resized
-                print(f"[image] prepared file: {resized}")
-            except Exception as e:
-                print(f"[error] {e}")
-            continue
-
-        if not current_image:
-            print("[warn] Set an image first: /image PATH")
-            continue
-
+        # saving structured results in JSON format
         try:
-            answer = run_langchain(line, current_image)
-            print(f"[AI] {answer}\n")
-        except Exception as e:
-            print(f"[error] {e}")
-
-        print(f"[send] prompt: {line}")
-        print(f"[send] image:  {current_image}")
+            data = json.loads(out)
+            with open("results.json", "w", encoding="utf-8") as f:
+                json.dump(data, f)
+            print("[chat_bot] results.json saved")
+        except Exception:
+            print("[chat_bot] Output is not valid JSON. Skipped saving.")
 
 if __name__ == "__main__":
-    main()
+    run_chat()
