@@ -49,11 +49,6 @@ def main():
             json.dump(data, f, indent=2, ensure_ascii=False)
         print("[app] results.json saved")
 
-        #print out result for better in terminal
-        #we can add more aspects in future if needed
-        print(f"disease   : {data.get('disease')}")
-        print(f"confidence: {data.get('confidence')}")
-        print(f"evidence  : {data.get('evidence')}")
 
     except Exception as e:
         #print exception
