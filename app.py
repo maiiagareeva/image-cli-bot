@@ -30,8 +30,15 @@ def main():
     crop_resize_512(args.image, cropped)
     print(f"[app] Cropped → {cropped}")
 
+    json_spec = (
+        "Return ONLY a JSON object with keys: "
+        "disease (string), confidence (number between 0 and 1), evidence (string). "
+        "Do not include any extra commentary, markdown, or code fences."
+    )
+    prompt_for_model = f"{args.prompt}\n\n{json_spec}"
+
     #inference pipeline
-    out = classify_image(args.prompt, cropped)
+    out = classify_image(prompt_for_model, cropped)
     print("\n===MODEL OUTPUT===")
     print(out)
 
@@ -41,6 +48,8 @@ def main():
         with open("results.json", "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
         print("[app] results.json saved")
+
+
     except Exception as e:
         #print exception
         print(f"[app] output is not valid JSON ({type(e).__name__}). Skipped saving results.json.")
