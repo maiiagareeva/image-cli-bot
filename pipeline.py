@@ -2,7 +2,7 @@ import os #environment variables
 import base64 #encodes image bytes into text
 from pathlib import Path
 from dotenv import load_dotenv, find_dotenv #put environment variable sinto a .env file (for safety)
-from langchain_core.messages import HumanMessage, AIMessage
+from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 #HumanMessage:human input
 #AIMessage: model(ai) output
 
@@ -42,7 +42,13 @@ else:
     #missing or invalid API KEy
     if not API_KEY or not API_KEY.startswith("sk-"):
         raise SystemExit("No valid OPENAI_API_KEY.")
-    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0, api_key=API_KEY)
+    llm = ChatOpenAI(
+        model="gpt-4o-mini", 
+        temperature=0, 
+        api_key=API_KEY,
+        #enable OpenAI's JSON mode (the protocol layer forces JSON to be returned)
+        model_kwargs={"response_format": {"type": "json_object"}}
+        )
 
 def classify_image(prompt: str, image_path: str) -> str:
     # Mock
@@ -50,10 +56,21 @@ def classify_image(prompt: str, image_path: str) -> str:
         response = llm.invoke()
         return response.content
 
+    # for real api calls:
+    # system gurdrails
+    system_guard = (
+        "You are an image-vision assistant for leaf disease classification. "
+        "Return ONLY a single JSON object with EXACT keys: "
+        'disease (string), confidence (number between 0 and 1), evidence (string). '
+        "No extra text, no markdown, no code fences."
+    )
+
     # multimodel
-    msg = HumanMessage(content=[
+    msg = [
+        SystemMessage(content=system_guard),
+        HumanMessage(content=[
         {"type": "text", "text": prompt},
         {"type": "image_url", "image_url": {"url": image_to_data_uri(image_path)}},
-    ])
-    response = llm.invoke([msg])
+    ])]
+    response = llm.invoke(msg)
     return response.content
