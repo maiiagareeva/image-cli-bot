@@ -44,3 +44,30 @@ python app.py --prompt "Classify the leaf disease and explain why." --image exam
 export USE_MOCK=0
 python app.py --prompt "..." --image examples/leaf.jpg
 ```
+
+## CLIP integration
+
+```bash
+python metadata_manifest.py
+
+python - <<'PY'
+from get_topk_evidence import clip_topk_evidence
+print(clip_topk_evidence("examples/leaf.jpg", k=3))
+PY
+
+```
+
+## mock
+
+```bash
+export USE_MOCK=1
+python app.py --prompt "Classify the leaf disease and explain why." --image examples/leaf.jpg
+```
+
+## real api call
+
+```bash
+export USE_MOCK=0
+export OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxx
+python app.py --prompt "Classify the leaf disease and explain why." --image examples/leaf.jpg
+```
