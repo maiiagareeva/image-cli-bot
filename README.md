@@ -37,6 +37,19 @@ python app.py --prompt "..." --image examples/leaf.jpg
 ```
 
 
+
+# preprocess launch
+```bash
+python preprocess.py \
+  --root "leaf_disease_vlm" \
+  --manifest-out metadata_manifest.csv \
+  --clean-out metadata_clean.csv \
+  --resize 512 \
+  --output-images-dir ./processed_vlm_512 \
+  --result-out preprocess_result.json
+```
+
+
 ## RUN CLIP AND PIPELINE TEST ALL IN ONCE
 ```bash
 python3 -m venv .venv
@@ -100,3 +113,4 @@ with open(CSV, newline="", encoding="utf-8") as f:
 print(f"Test={tot}  Acc@1={ok1/max(tot,1):.3f}  Acc@{K}={okK/max(tot,1):.3f}")
 PY
 ```
+
