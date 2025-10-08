@@ -71,3 +71,15 @@ export USE_MOCK=0
 export OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxx
 python app.py --prompt "Classify the leaf disease and explain why." --image examples/leaf.jpg
 ```
+
+# preprocess launch
+
+```bash
+python preprocess.py \
+  --root "leaf_disease_vlm" \
+  --manifest-out metadata_manifest.csv \
+  --clean-out metadata_clean.csv \
+  --resize 512 \
+  --output-images-dir ./processed_vlm_512 \
+  --result-out preprocess_result.json
+```
