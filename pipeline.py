@@ -4,17 +4,14 @@ from pathlib import Path
 from dotenv import load_dotenv, find_dotenv 
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from get_topk_evidence import clip_topk_evidence
-<<<<<<< Updated upstream
 
-=======
->>>>>>> Stashed changes
 load_dotenv(find_dotenv(usecwd=True), override=True)
 USE_MOCK = os.getenv("USE_MOCK", "0") == "1"
 API_KEY = os.getenv("OPENAI_API_KEY")
 
 print(f"[pipeline] USE_MOCK = {USE_MOCK}")
 
-def image_to_data_uri(path: str):
+def image_to_data_uri(path: str) -> str:
     # TODO: considering handle more image structure, desigend to process png, but jpg works as well during test
     b = Path(path).read_bytes()
     return "data:image/png;base64," + base64.b64encode(b).decode()
@@ -42,11 +39,7 @@ else:
         api_key=API_KEY,
         model_kwargs={"response_format": {"type": "json_object"}}
         )
-<<<<<<< Updated upstream
 
-=======
-#only support one image input at once
->>>>>>> Stashed changes
 def classify_image(prompt: str, image_path: str):
     if USE_MOCK:
         response = llm.invoke()
@@ -59,23 +52,13 @@ def classify_image(prompt: str, image_path: str):
         "disease (string), confidence (number between 0 and 1), evidence (string). "
         "use the CLIP evidence"
     )
-<<<<<<< Updated upstream
     clip_evidence = clip_topk_evidence(image_path, 3)
-=======
-    clip_evidence=clip_topk_evidence(image_path,3)
->>>>>>> Stashed changes
 
     msg = [
         SystemMessage(content=system_guard),
         HumanMessage(content=[
-<<<<<<< Updated upstream
             {"type": "text", "text": f"{prompt}\n\n{clip_evidence}"},
             {"type": "image_url", "image_url": {"url": image_to_data_uri(image_path)}},
         ])
     ]
-=======
-        {"type": "text", "text": f"{prompt}\n\n{clip_evidence}"},
-        {"type": "image_url", "image_url": {"url": image_to_data_uri(image_path)}},
-    ])]
->>>>>>> Stashed changes
     return llm.invoke(msg).content
