@@ -33,7 +33,7 @@ pip install pillow==11.3.0 python-dotenv langchain-core langchain-openai pytest
 
 ```bash
 export USE_MOCK=0
-python app.py --prompt "..." --image examples/leaf.jpg
+python app.py --prompt "..." --image data/test.jpg
 ```
 
 

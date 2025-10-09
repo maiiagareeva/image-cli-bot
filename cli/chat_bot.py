@@ -5,7 +5,7 @@ import sys
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from crop_send import crop_resize_512
-from pipeline import classify_image, USE_MOCK
+from pipeline import classify_image, USE_MOCK, API_KEY
 
 def run_chat():
     print(f"[chat_bot] USE_MOCK = {USE_MOCK}")

@@ -1,0 +1,21 @@
+{
+  "root": "/Users/maiia/VLM-agrobotics/image-cli-bot/leaf_disease_vlm",
+  "num_classes": 4,
+  "classes": [
+    "downy_early_leaf_bottom",
+    "downy_early_leaf_top",
+    "healthy",
+    "phylloxera"
+  ],
+  "pairs_in_manifest": 44,
+  "pairs_after_cleaning": 44,
+  "missing_txt": [],
+  "img_missing": [],
+  "missing_txt_count": 0,
+  "img_missing_count": 0,
+  "resized_images_count": 44,
+  "manifest_out": "/Users/maiia/VLM-agrobotics/image-cli-bot/metadata_manifest.csv",
+  "clean_out": "/Users/maiia/VLM-agrobotics/image-cli-bot/metadata_clean.csv",
+  "class_map_yaml": "/Users/maiia/VLM-agrobotics/image-cli-bot/class_map.yaml",
+  "output_images_dir": "/Users/maiia/VLM-agrobotics/image-cli-bot/processed_vlm_512"
+}
