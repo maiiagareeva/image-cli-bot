@@ -24,7 +24,7 @@ def normalize_text(s) -> str:
     if s is None:
         return ""
     s = unicodedata.normalize("NFC", str(s))
-    s = s.replace("\u00A0", " ").strip().lower()  # non-breaking spaces turn into space
+    s = s.replace("\u00A0", " ").strip().lower()[:70]  # non-breaking spaces turn into space
     s = re.sub(r"\s+", " ", s) # one or more whitespace characters
     return s
 

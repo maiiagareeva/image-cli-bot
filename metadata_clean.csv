@@ -1,0 +1,45 @@
+id,image_path,class_name,texts,split
+downy_early_leaf_bottom/008,leaf_disease_vlm/downy_early_leaf_bottom/008.jpeg,downy_early_leaf_bottom,"this grape leaf clearly displays downy mildew symptoms, with patches o",test
+downy_early_leaf_bottom/007,leaf_disease_vlm/downy_early_leaf_bottom/007.jpeg,downy_early_leaf_bottom,"here, the grape leaf shows signs of downy mildew infection, visible as",test
+downy_early_leaf_bottom/003,leaf_disease_vlm/downy_early_leaf_bottom/003.jpeg,downy_early_leaf_bottom,"in this image, the grape leaf displays multiple dark necrotic patches ",test
+downy_early_leaf_bottom/010,leaf_disease_vlm/downy_early_leaf_bottom/010.jpeg,downy_early_leaf_bottom,"this grape leaf is also infected with downy mildew, as evidenced by th",val
+downy_early_leaf_bottom/013,leaf_disease_vlm/downy_early_leaf_bottom/013.jpeg,downy_early_leaf_bottom,this grape leaf is heavily infected with downy mildew. patches of dens,val
+downy_early_leaf_bottom/006,leaf_disease_vlm/downy_early_leaf_bottom/006.jpeg,downy_early_leaf_bottom,"this leaf is infected with downy mildew, displaying a mix of pale and ",train
+downy_early_leaf_bottom/012,leaf_disease_vlm/downy_early_leaf_bottom/012.jpeg,downy_early_leaf_bottom,"this leaf shows downy mildew infection characterized by dark, irregula",train
+downy_early_leaf_bottom/009,leaf_disease_vlm/downy_early_leaf_bottom/009.jpeg,downy_early_leaf_bottom,the leaf in this image shows significant downy mildew infection. multi,train
+downy_early_leaf_bottom/004,leaf_disease_vlm/downy_early_leaf_bottom/004.jpeg,downy_early_leaf_bottom,"this grape leaf is covered with fine natural trichomes, giving it a te",train
+downy_early_leaf_bottom/005,leaf_disease_vlm/downy_early_leaf_bottom/005.jpeg,downy_early_leaf_bottom,the leaf here shows several widespread patches of downy mildew infecti,train
+downy_early_leaf_bottom/001,leaf_disease_vlm/downy_early_leaf_bottom/001.jpeg,downy_early_leaf_bottom,this grape leaf shows a coating of fine natural fuzz (trichomes) on it,train
+downy_early_leaf_bottom/002,leaf_disease_vlm/downy_early_leaf_bottom/002.jpeg,downy_early_leaf_bottom,"this leaf is infected with downy mildew, as seen by the patches of den",train
+downy_early_leaf_bottom/011,leaf_disease_vlm/downy_early_leaf_bottom/011.jpeg,downy_early_leaf_bottom,this grape leaf is clearly infected with downy mildew. large irregular,train
+downy_early_leaf_top/008,leaf_disease_vlm/downy_early_leaf_top/008.jpeg,downy_early_leaf_top,this leaf demonstrates necrotic spots caused by downy mildew. at least,test
+downy_early_leaf_top/004,leaf_disease_vlm/downy_early_leaf_top/004.jpeg,downy_early_leaf_top,the surface of this leaf reveals multiple faint yellow lesions consist,test
+downy_early_leaf_top/003,leaf_disease_vlm/downy_early_leaf_top/003.jpeg,downy_early_leaf_top,this grape leaf displays several necrotic spots associated with downy ,test
+downy_early_leaf_top/009,leaf_disease_vlm/downy_early_leaf_top/009.jpeg,downy_early_leaf_top,"this grape leaf displays a large, diffuse yellow lesion at the lower c",val
+downy_early_leaf_top/006,leaf_disease_vlm/downy_early_leaf_top/006.jpeg,downy_early_leaf_top,"the leaf in this image is showing scattered brown necrotic lesions, co",val
+downy_early_leaf_top/007,leaf_disease_vlm/downy_early_leaf_top/007.jpeg,downy_early_leaf_top,this grapevine leaf shows faint splotches of yellowing across the top ,train
+downy_early_leaf_top/010,leaf_disease_vlm/downy_early_leaf_top/010.jpeg,downy_early_leaf_top,this final image shows extensive yellow mottling on the top surface of,train
+downy_early_leaf_top/005,leaf_disease_vlm/downy_early_leaf_top/005.jpeg,downy_early_leaf_top,"this leaf is heavily affected by downy mildew, showing large, irregula",train
+downy_early_leaf_top/001,leaf_disease_vlm/downy_early_leaf_top/001.jpeg,downy_early_leaf_top,"this grapevine leaf is infected with downy mildew, and the early signs",train
+downy_early_leaf_top/002,leaf_disease_vlm/downy_early_leaf_top/002.jpeg,downy_early_leaf_top,"this leaf exhibits more advanced downy mildew symptoms, with prominent",train
+downy_early_leaf_top/011,leaf_disease_vlm/downy_early_leaf_top/011.jpeg,downy_early_leaf_top,"this grapevine leaf, viewed from the top, is clearly infected with dow",train
+healthy/008,leaf_disease_vlm/healthy/008.jpeg,healthy,"the photographed grape leaf is bright green and healthy, with a strong",test
+healthy/004,leaf_disease_vlm/healthy/004.jpeg,healthy,"the leaf is firm, green, and shows a strong, healthy structure. its ve",test
+healthy/003,leaf_disease_vlm/healthy/003.jpeg,healthy,"this leaf is a healthy shade of green, with a consistent coloration ac",test
+healthy/009,leaf_disease_vlm/healthy/009.jpeg,healthy,"this grape leaf is well-shaped with a healthy, uniform green coloratio",val
+healthy/006,leaf_disease_vlm/healthy/006.jpeg,healthy,"this grape leaf is strikingly healthy, with a vivid green hue and symm",val
+healthy/007,leaf_disease_vlm/healthy/007.jpeg,healthy,"this leaf is large, green, and fully intact, with clearly defined vein",train
+healthy/010,leaf_disease_vlm/healthy/010.jpeg,healthy,"this leaf is elongated, with a strong central lobe and well-developed ",train
+healthy/005,leaf_disease_vlm/healthy/005.jpeg,healthy,"the photographed grape leaf is broad and evenly shaped, showcasing its",train
+healthy/001,leaf_disease_vlm/healthy/001.jpeg,healthy,this grape leaf is vibrant green and displays a uniform color througho,train
+healthy/002,leaf_disease_vlm/healthy/002.jpeg,healthy,"the leaf shown is broad, lush, and richly green, with a smooth surface",train
+phylloxera/008,leaf_disease_vlm/phylloxera/008.jpeg,phylloxera,this leaf presents a combination of phylloxera galls and other stress-,test
+phylloxera/004,leaf_disease_vlm/phylloxera/004.jpeg,phylloxera,"in this top view, the phylloxera gall infestation presents as shallow ",test
+phylloxera/003,leaf_disease_vlm/phylloxera/003.jpeg,phylloxera,"here, the phylloxera galls are especially prominent from the underside",test
+phylloxera/009,leaf_disease_vlm/phylloxera/009.jpeg,phylloxera,"this leaf, viewed from the underside, is marked by dense clusters of r",val
+phylloxera/006,leaf_disease_vlm/phylloxera/006.jpeg,phylloxera,this leaf demonstrates a more severe stage of phylloxera infestation. ,val
+phylloxera/007,leaf_disease_vlm/phylloxera/007.jpeg,phylloxera,"the galls on this leaf are visible from the underside, where they mani",train
+phylloxera/010,leaf_disease_vlm/phylloxera/010.jpeg,phylloxera,the leaf shows extensive phylloxera galling coupled with advanced dama,train
+phylloxera/005,leaf_disease_vlm/phylloxera/005.jpeg,phylloxera,this leaf again shows the upper surface symptoms of phylloxera galling,train
+phylloxera/001,leaf_disease_vlm/phylloxera/001.jpeg,phylloxera,"this leaf shows clear evidence of phylloxera gall infection, with smal",train
+phylloxera/002,leaf_disease_vlm/phylloxera/002.jpeg,phylloxera,"this leaf exhibits a heavier phylloxera infestation, with numerous cra",train
