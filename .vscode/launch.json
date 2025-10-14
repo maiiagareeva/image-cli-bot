@@ -1,0 +1,30 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python Debugger: Current File",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Run pipeline with real API_KEY",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "app.py",
+            "args": ["--prompt", 
+                    "...", 
+                    "--image",
+                    "leaf_disease_vlm/downy_early_leaf_bottom/001.jpeg"],
+            "env": {
+                "USE_MOCK": "0",
+                        },
+            "envFile": "${workspaceFolder}/secrets/openai.env",
+            "console": "integratedTerminal"
+        }
+    ]
+}

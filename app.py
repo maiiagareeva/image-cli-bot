@@ -1,10 +1,11 @@
 import argparse, os, json
 from cli.crop_send import crop_resize_512
-from pipeline import classify_image, USE_MOCK
+from pipeline import classify_image, USE_MOCK, API_KEY
 from pathlib import Path
 
 def main():
     print(f"[app] USE_MOCK = {USE_MOCK}")
+    # print(f"[app] API_KEY = {API_KEY}")
 
     ap = argparse.ArgumentParser(description="Classify a leaf image with an VLM.")
     ap.add_argument("--prompt", required=False)
