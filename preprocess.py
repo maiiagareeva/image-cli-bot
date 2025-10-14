@@ -1,15 +1,16 @@
 import argparse
 import json
-import os
 import re
 import sys
 from pathlib import Path
 from typing import Dict, List, Tuple
+import nltk
 
 import pandas as pd
 from PIL import Image
 from tqdm import tqdm
 import unicodedata
+from common_words import DOMAIN_STOPWORDS
 
 sys.path.append(str(Path(__file__).resolve().parents[1] / "scripts"))
 
@@ -17,16 +18,23 @@ from cli.crop_send import crop_resize_512
 
 
 IMG_EXTS = {".jpg", ".jpeg", ".png"}
+nltk.download("stopwords")
+STOPWORDS = set(nltk.corpus.stopwords.words("english"))
+STOPWORDS |= DOMAIN_STOPWORDS
 
-
-def normalize_text(s) -> str:
+def normalize_text(s: str, max_len: int = 77) -> str:
     # normalization
     if s is None:
         return ""
     s = unicodedata.normalize("NFC", str(s))
-    s = s.replace("\u00A0", " ").strip().lower()[:70]  # non-breaking spaces turn into space
-    s = re.sub(r"\s+", " ", s) # one or more whitespace characters
-    return s
+    s = s.replace("\u00A0", " ").strip().lower()  # non-breaking spaces turn into space
+    s = re.sub(r"[^a-z0-9\s]", " ", s)
+    s = re.sub(r"\s+", " ", s).strip()
+    all_words = [w for w in s.split() if w not in STOPWORDS] # creating a new filtered text from the old one
+    result = " ".join(all_words)
+    # if len(result) > max_len:
+    #     result = result[:max_len].rsplit(" ", 1)[0] # takes everything despite the last word
+    return result
 
 
 def is_image_file(p: Path) -> bool:

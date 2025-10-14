@@ -9,9 +9,11 @@
   ],
   "pairs_in_manifest": 44,
   "pairs_after_cleaning": 44,
-  "missing_txt": [],
+  "missing_txt": [
+    "downy_early_leaf_bottom/001_512.png"
+  ],
   "img_missing": [],
-  "missing_txt_count": 0,
+  "missing_txt_count": 1,
   "img_missing_count": 0,
   "resized_images_count": 44,
   "manifest_out": "/Users/maiia/VLM-agrobotics/image-cli-bot/metadata_manifest.csv",
