@@ -49,6 +49,17 @@ python preprocess.py \
   --result-out preprocess_result.json
 ```
 
+# common_words launch
+```bash
+python common_words.py \
+  --root "leaf_disease_vlm" \
+  --manifest-out metadata_manifest.csv \
+  --clean-out metadata_clean.csv \
+  --resize 512 \
+  --output-images-dir ./processed_vlm_512 \
+  --result-out preprocess_result.json
+```
+
 
 ## RUN CLIP AND PIPELINE TEST ALL IN ONCE
 ```bash
