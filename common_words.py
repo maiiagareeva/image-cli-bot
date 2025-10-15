@@ -38,5 +38,5 @@ for row in df["texts"]:
 
 maxi = 15
 DOMAIN_STOPWORDS |= {k for k, v in dic.items() if v > maxi}
-print(DOMAIN_STOPWORDS)
+# print(DOMAIN_STOPWORDS)
 # print(sorted(list(dic.values())))
