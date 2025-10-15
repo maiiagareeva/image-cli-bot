@@ -3,12 +3,34 @@ from PIL import Image
 from transformers import CLIPModel, CLIPProcessor
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
-model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32").to(device).eval()
+model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32",
+                                  use_safetensors=True,
+                                  dtype="auto",
+                                  ).to(device).eval()
 processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
 
 @torch.no_grad()
 def embed_texts(texts):
-    tensor = processor(text=texts, return_tensors="pt", padding=True).to(device) #[#of texts, max_length]
+    test = processor.tokenizer(
+        texts,
+        add_special_tokens=True,
+        padding=False,
+        truncation=False,
+        return_offsets_mapping=True,
+    )
+    for i, t in enumerate(texts):
+        ids = test["input_ids"][i]
+        n = len(ids)
+        if n > 77:
+            first_tokens = processor.tokenizer.convert_ids_to_tokens(ids[:40])
+            print(f"[CLIP #of tokens debug] idx={i} tokens={n}  EXCEEDS 77")
+            print("[CLIP # of tokens debug] first tokens:", first_tokens)
+        else:
+            print(f"[CLIP #of tokens debug] idx={i} tokens={n}  OK")
+
+    tensor = processor(text=texts, return_tensors="pt", padding=True,
+                                  truncation=True,
+                                  max_length=77 ).to(device)
     embed = model.get_text_features(**tensor) #[#of texts,embedding dimension]
     return embed/embed.norm(p=2, dim=-1, keepdim=True)  #[#of texts,embedding dimension]
 

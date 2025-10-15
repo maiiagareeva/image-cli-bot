@@ -4,8 +4,8 @@ from pathlib import Path
 import yaml
 import json
 #change database path to a new path once preprocess is done
-database=Path("processed_vlm_512")
-CLASS_yaml="class_map.yaml"
+database=Path("processed_vlm_512\leaf_disease_vlm")
+CLASS_yaml="classes.yaml"
 store= Path("metadata_clean.csv")    
 
 num_test = 3
