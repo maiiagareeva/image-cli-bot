@@ -6,6 +6,7 @@ from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from get_topk_evidence import clip_topk_evidence
 from openai import OpenAI
 import json
+from few_shots import few_shots_collection
 
 load_dotenv(find_dotenv(usecwd=True), override=True)
 USE_MOCK       = os.getenv("USE_MOCK", "0") == "1"
@@ -89,6 +90,7 @@ def message_feed(prompt,image_path,k):
         "}\n"
         "If the leaf looks healthy, output 'Healthy Leaf' as disease. "
         "Do not leave any field empty."
+        "Follow the examples I provide"
     )
     clip_evidence = clip_topk_evidence(image_path, k)
     msg=[]
@@ -107,6 +109,11 @@ def message_feed(prompt,image_path,k):
                 {"type": "text", "text": f"{prompt}\n\n{clip_evidence}"},
             ])
         ]
+    
+    for user,ai in few_shots_collection():
+        msg.append(user)
+        msg.append(ai)
+
     return msg
 
 
@@ -140,4 +147,3 @@ def classify_image(prompt: str, image_path: str):
     print(f"[pipeline] Chat Completion response content \n {completion.model_dump_json(indent=2)} \n Chat Completion response FINISHED PRINT \n")
 
     return completion.choices[0].message.content
-
