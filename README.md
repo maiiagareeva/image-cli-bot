@@ -29,6 +29,15 @@ python -m pip install -U pip wheel setuptools
 pip install pillow==11.3.0 python-dotenv langchain-core langchain-openai pytest
 ```
 
+## Mock mode run
+
+## WSL
+
+```bash
+export USE_MOCK=1
+python app.py --prompt "Classify the leaf disease and explain why." --image examples/leaf.jpg
+```
+
 ## real API call
 
 ```bash
@@ -36,9 +45,35 @@ export USE_MOCK=0
 python app.py --prompt "..." --image data/test.jpg
 ```
 
+## CLIP integration
 
+```bash
+python metadata_manifest.py
+
+python - <<'PY'
+from get_topk_evidence import clip_topk_evidence
+print(clip_topk_evidence("examples/leaf.jpg", k=3))
+PY
+
+```
+
+## mock
+
+```bash
+export USE_MOCK=1
+python app.py --prompt "Classify the leaf disease and explain why." --image examples/leaf.jpg
+```
+
+## real api call
+
+```bash
+export USE_MOCK=0
+export OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxx
+python app.py --prompt "Classify the leaf disease and explain why." --image examples/leaf.jpg
+```
 
 # preprocess launch
+
 ```bash
 python preprocess.py \
   --root "leaf_disease_vlm" \
@@ -50,6 +85,7 @@ python preprocess.py \
 ```
 
 # common_words launch
+
 ```bash
 python common_words.py \
   --root "leaf_disease_vlm" \
@@ -60,8 +96,8 @@ python common_words.py \
   --result-out preprocess_result.json
 ```
 
-
 ## RUN CLIP AND PIPELINE TEST ALL IN ONCE
+
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
@@ -105,7 +141,7 @@ tot=ok1=okK=0
 with open(CSV, newline="", encoding="utf-8") as f:
     for r in csv.DictReader(f):
         img = r["image_path"]
-        if r["split"]!="test" or not os.path.exists(img): 
+        if r["split"]!="test" or not os.path.exists(img):
             continue
         texts=[t for t in r["texts"].split("|") if t.strip()]
         texts+=["healthy leaf: uniform green, no spots, no powder"]
@@ -124,4 +160,3 @@ with open(CSV, newline="", encoding="utf-8") as f:
 print(f"Test={tot}  Acc@1={ok1/max(tot,1):.3f}  Acc@{K}={okK/max(tot,1):.3f}")
 PY
 ```
-
