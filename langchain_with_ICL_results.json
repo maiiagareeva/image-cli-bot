@@ -1,35 +1,38 @@
 {
-  "disease": "powdery_mildew",
+  "disease": "grape_phylloxera",
   "confidence": 0.95,
   "severity": "moderate",
   "indicators": [
-    "Presence of white powdery spots on leaf surface",
-    "Distorted leaf shape with curling edges",
-    "Yellowing and browning of leaf tissue",
-    "Visible fungal growth on both sides of the leaf"
+    "Presence of small galls on leaf surface",
+    "Deformation of leaf structure",
+    "Greenish-yellow color of galls",
+    "Reduced leaf area and vigor"
   ],
   "regions": [
-    "leaf surface",
-    "leaf edges"
+    "leaf surface"
   ],
   "differentials": [
     {
-      "candidate": "downy mildew",
-      "why_ruled_out": "Downy mildew typically shows yellow spots on the upper surface and white growth on the underside, which is not observed here."
+      "candidates": "Powdery mildew",
+      "reason_less_likely": "Powdery mildew typically shows white fungal growth rather than galls."
     },
     {
-      "candidate": "leaf spot disease",
-      "why_ruled_out": "Leaf spot diseases usually present as dark spots rather than a powdery coating."
+      "candidates": "Downy mildew",
+      "reason_less_likely": "Downy mildew presents with yellow spots and fuzzy growth, not galls."
     }
   ],
   "recommended_checks": [
-    "Inspect for white powdery growth on other leaves",
-    "Check for signs of leaf distortion or curling",
-    "Assess environmental conditions for humidity and moisture levels"
+    "Inspect for additional galls on other leaves",
+    "Check for signs of leaf discoloration or wilting",
+    "Monitor for pest presence on stems and roots"
   ],
-  "evidence": "The grape leaf exhibits significant signs of powdery mildew, characterized by a white, powdery fungal growth that covers the surface. The leaf edges appear distorted and curled, indicating stress from the infection. Additionally, the presence of yellowing and browning areas suggests that the leaf tissue is being compromised. The fungal growth is visible on both sides of the leaf, which is typical for powdery mildew. The overall condition of the leaf indicates moderate severity, as the leaf is still intact but shows clear signs of infection affecting its health and function.",
+  "evidence": "The image shows a grape leaf heavily infested with small, greenish galls that are characteristic of grape phylloxera (Daktulosphaira vitifoliae). These galls are irregularly distributed and cause deformation of the leaf structure, indicating a moderate level of infestation. The presence of these galls suggests that the leaf is under stress, which can lead to reduced photosynthetic capacity and overall vigor of the plant. The galls appear to be well-defined and protruding, which is typical for phylloxera infestations, contrasting with other diseases that may present differently, such as powdery or downy mildew.",
   "references": [
-    "Powdery mildew is caused by the fungus Erysiphe necator.",
-    "It thrives in warm, dry conditions and can spread rapidly in vineyards."
+    "Grape Phylloxera: A Pest of Grapevines",
+    "University Extension Resources on Grape Diseases"
   ]
 }
+
+
+
+

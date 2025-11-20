@@ -28,7 +28,7 @@ llm = ChatOpenAI(
     api_key=API_KEY,
     base_url=BASE_URL,
     temperature=0.1,
-    max_tokens=2000,
+    max_tokens=4000,
 )
 
 
@@ -71,7 +71,7 @@ def build_messages(image_path: str,
         "JSON fields:\n"
         "  disease (string), confidence (0-1 float), severity (mild|moderate|severe),\n"
         "  indicators (>=4 short bullet strings), regions (optional list),\n"
-        "  differentials (2-3 objects: {candidate, why_ruled_out}),\n"
+        "  differentials (2-3 objects: {candidates, reason_less_likely}),\n"
         "  recommended_checks (>=3 items),\n"
         "  evidence (>=120 words, one paragraph, objective visual rationale),\n"
         "  references (optional short factual bullets).\n"
