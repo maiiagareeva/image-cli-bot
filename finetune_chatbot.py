@@ -2,7 +2,6 @@ import os, json
 from typing import List, Optional
 from peft import PeftModel
 from pydantic import BaseModel, Field
-from langchain_core.runnables import RunnableLambda, RunnableParallel
 from langchain_core.output_parsers import JsonOutputParser,StrOutputParser
 from langchain_core.messages import HumanMessage, SystemMessage,AIMessage
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
@@ -16,18 +15,19 @@ from langchain_core.prompts import ChatPromptTemplate
 
 from get_topk_evidence import clip_topk_evidence
 from few_shots import few_shots_collection
+from clip_zero_shot import classify_leaf_condition
 
 
 # first try
-# USE_LORA = True 
-# BASE_MODEL_ID = "Qwen/Qwen3-1.7B"
-# LORA_MODEL_PATH = "qwen3-1.7b-guanaco"
+USE_LORA = True 
+BASE_MODEL_ID = "Qwen/Qwen3-1.7B"
+LORA_MODEL_PATH = "qwen3-1.7b-guanaco"
 
 
 # second try
-USE_LORA = True 
-BASE_MODEL_ID   = "Qwen/Qwen1.5-4B-Chat"
-LORA_MODEL_PATH = "qwen15-4b-leaf-lora"
+# USE_LORA = True 
+# BASE_MODEL_ID   = "Qwen/Qwen1.5-4B-Chat"
+# LORA_MODEL_PATH = "qwen15-4b-leaf-lora"
 
 # # third try
 # USE_LORA = True 
@@ -67,7 +67,7 @@ def extract_text_from_message(msg):
 
 
 class Differential(BaseModel):
-    candidates: str = Field(..., description="Alternative diagnosis to consider")
+    candidates: List[str] = Field(..., description="Alternative diagnosis to consider")
     reason_less_likely: str = Field(..., description="Reason this alternative is less likely")
 
 class LeafDiseaseDetection(BaseModel):
@@ -83,11 +83,88 @@ class LeafDiseaseDetection(BaseModel):
 
 parser = JsonOutputParser(pydantic_object=LeafDiseaseDetection)
 
+HEALTHY_CLASS_THRESHOLD = float(os.getenv("HEALTHY_CONF_THRESHOLD", "1.01"))
+HEALTHY_MARGIN_THRESHOLD = float(os.getenv("HEALTHY_MARGIN_THRESHOLD", "0.2"))
 
 
+def _clean_evidence_lines(evidence_block: str | None) -> List[str]:
+    lines = []
+    if not evidence_block:
+        return lines
+    for line in evidence_block.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        if line.startswith("-"):
+            line = line[1:].strip()
+        lines.append(line)
+    return lines
 
 
+def _build_healthy_guardrail(evidence_lines: List[str],
+                             class_probs: dict[str, float]) -> Optional[LeafDiseaseDetection]:
+    if not class_probs:
+        return None
+    healthy_prob = class_probs.get("healthy", 0.0)
+    # find top two labels
+    sorted_labels = sorted(class_probs.items(), key=lambda kv: kv[1], reverse=True)
+    top_label, top_prob = sorted_labels[0]
+    runner_up_prob = sorted_labels[1][1] if len(sorted_labels) > 1 else 0.0
+    margin = top_prob - runner_up_prob
+    if (
+        top_label != "healthy"
+        or healthy_prob < HEALTHY_CLASS_THRESHOLD
+        or margin < HEALTHY_MARGIN_THRESHOLD
+    ):
+        return None
 
+    disease_keywords = ("spot", "lesion", "mildew", "gall", "blotch", "necrotic", "powdery")
+    if any(any(keyword in line.lower() for keyword in disease_keywords) for line in evidence_lines):
+        return None
+
+    indicator_text = [
+        "uniform green coloration across the leaf lamina",
+        "sharp intact veins without chlorosis",
+        "smooth surfaces with no fuzz, mildew or galling",
+        "serrated margins remain crisp and undamaged"
+    ]
+    narrative = (
+        f"CLIP zero-shot comparison ranks the healthy template highest with probability {healthy_prob:.2f}. "
+        "The descriptive captions emphasize even pigmentation, intact lobes, and the absence of lesions, "
+        "oil spots, downy growth, or insect swellings. These observations correspond to a leaf that is actively "
+        "photosynthesizing without visible stress. Because no prompts mention sporulation or tissue collapse, the "
+        "guardrail emits a healthy assessment rather than forcing a disease label. Continue normal scouting routines, "
+        "inspect the underside after humid nights, and keep canopy airflow balanced, but no treatment is recommended "
+        "based on this photograph alone."
+    )
+
+    return LeafDiseaseDetection(
+        disease="healthy",
+        confidence=min(0.99, max(0.55, healthy_prob)),
+        severity="none",
+        indicators=indicator_text,
+        regions=["entire leaf"],
+        differentials=[
+            Differential(
+                candidates=["downy_mildew_early_leaf_top"],
+                reason_less_likely="No oil-like spots, chlorosis, or downy fuzz are visible in the evidence captions."
+            ),
+            Differential(
+                candidates=["phylloxera"],
+                reason_less_likely="There are no dome-shaped galls or blistered protrusions on the blade."
+            ),
+        ],
+        recommended_checks=[
+            "continue regular scouting over the next 7–10 days",
+            "inspect underside surfaces after humid or rainy weather",
+            "maintain standard canopy airflow and sanitation practices"
+        ],
+        evidence=narrative,
+        references=[
+            "Healthy grape leaves keep uniform pigment and intact serrations",
+            "Absence of oil spots, fuzz, or galls indicates no active infection"
+        ]
+    )
 def diagnosis_to_json_str(diagnosis) -> str:
     if isinstance(diagnosis, BaseModel):
         try:
@@ -145,16 +222,26 @@ llm=load_llm()
 def build_prompt_text(
                    user_input: str,
                    evidence: Optional[List[str]] = None,
-                   shots: Optional[list[tuple[HumanMessage, AIMessage]]] = None
+                   shots: Optional[list[tuple[HumanMessage, AIMessage]]] = None,
+                   class_probs: Optional[dict[str, float]] = None,
 ):
     ev = "\n".join(f"- {e}" for e in (evidence or []))
 
     sys_content = (
-        "You are an expert grape-leaf pathologist.\n"
-        "Return STRICTLY a single JSON object conforming to the given schema "
-        "(no preface, no markdown, no extra text). "
-        "Be precise and concrete. Avoid speculation beyond visible cues."
-    )
+    "You are an expert grape-leaf pathologist.\n"
+    "The disease has already been identified using visual similarity.\n"
+    "You MUST NOT change the disease label.\n"
+    "You MUST base indicators only on provided visual evidence.\n"
+    "If the disease is 'healthy', severity must be 'none'.\n"
+    "Only output 'healthy' when the evidence explicitly states there are no lesions, discoloration, or deformities.\n"
+    "If the disease is 'unknown' or 'uncertain', confidence must be <= 0.5.\n"
+    "Return STRICTLY a single JSON object matching the schema.\n"
+    "Do not add extra diseases or speculation.\n"
+    "The field 'indicators' must be a list of short visual cues"
+    "(e.g. 'yellow oil-like spots', 'white downy growth')."
+    "Do NOT copy the CLIP evidence text verbatim."
+)
+
 
     schema_hint = (
         "JSON fields:\n"
@@ -197,25 +284,27 @@ def build_prompt_text(
 
 
 def identify_run(image_path: str,
-              user_input: str = "Identify the grape leaf disease.",
-              shots_k: int = 4):
+                 user_input: str = "Identify the grape leaf disease.",
+                 shots_k: int = 4):
 
-    evidence = RunnableLambda(lambda d: clip_topk_evidence(d["image"], k=3))
-    fetch_shots    = RunnableLambda(lambda d: few_shots_collection(k=shots_k))
+    evidence_block = clip_topk_evidence(image_path, k=3)
+    evidence_lines = _clean_evidence_lines(evidence_block)
+    shots = few_shots_collection(k=shots_k)
+    class_probs = classify_leaf_condition(image_path)
 
-    prep = RunnableParallel(
-        evidence=evidence,
-        image=RunnableLambda(lambda d: d["image"]),
-        user_input=RunnableLambda(lambda d: d["user_input"]),
-        shots=fetch_shots
+    healthy_override = _build_healthy_guardrail(evidence_lines, class_probs)
+    if healthy_override:
+        return healthy_override
+
+    prompt = build_prompt_text(
+        user_input,
+        evidence=evidence_lines,
+        shots=shots,
+        class_probs=class_probs
     )
 
-    to_prompt = RunnableLambda(
-        lambda d: build_prompt_text(d["user_input"], d["evidence"], shots=d["shots"])
-    )
-
-    chain = prep | to_prompt | llm | parser
-    return chain.invoke({"image": image_path, "user_input": user_input})
+    model_output = llm.invoke(prompt)
+    return parser.invoke(model_output)
 
 
 
@@ -318,9 +407,15 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--image", required=True, help="Path to grape leaf image")
     ap.add_argument("--shots_k", type=int, default=4, help="Number of few-shots to use")
+    ap.add_argument("--prompt", type=str, default=None, help="Initial prompt")
     args = ap.parse_args()
 
-    image_path = args.image
+    image_path = os.path.expanduser(args.image)
+    if not os.path.exists(image_path) and not image_path.startswith("/"):
+        alt_path = "/" + image_path.lstrip("/")
+        if os.path.exists(alt_path):
+            image_path = alt_path
+
     if not os.path.exists(image_path):
         raise FileNotFoundError(f"Image not found: {image_path}")
 

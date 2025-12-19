@@ -2,11 +2,56 @@
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 import json
 import base64
+import os
 from pathlib import Path
 
-def image_url(path: str):
-    b = Path(path).read_bytes()
-    return "data:image/png;base64," + base64.b64encode(b).decode()
+REPO_ROOT = Path(__file__).resolve().parent
+HEALTHY_FEWSHOT_IMAGE = os.getenv("HEALTHY_FEWSHOT_IMAGE", "examples/healthy1.jpeg")
+
+
+def _candidate_paths(raw_path: str):
+    raw_path = raw_path.strip()
+    if not raw_path:
+        return []
+
+    path_obj = Path(raw_path).expanduser()
+    candidates = []
+    seen = set()
+
+    def _add_candidate(p: Path):
+        resolved = p if p.is_absolute() else p.resolve()
+        key = str(resolved)
+        if key not in seen:
+            seen.add(key)
+            candidates.append(resolved)
+
+    if path_obj.is_absolute():
+        _add_candidate(path_obj)
+    else:
+        _add_candidate((REPO_ROOT / path_obj))
+        _add_candidate((Path.cwd() / path_obj))
+        root_override = os.getenv("FEW_SHOTS_IMAGE_ROOT")
+        if root_override:
+            _add_candidate(Path(root_override).expanduser() / path_obj)
+        _add_candidate(path_obj)
+
+    return candidates
+
+
+def image_url(path_spec: str) -> str:
+    attempted: list[str] = []
+    options = [p.strip() for p in path_spec.split(",") if p.strip()] if path_spec else []
+    if not options:
+        options = [path_spec]
+
+    for option in options:
+        for candidate in _candidate_paths(option):
+            attempted.append(str(candidate))
+            if candidate.exists():
+                b = candidate.read_bytes()
+                return "data:image/png;base64," + base64.b64encode(b).decode()
+
+    raise FileNotFoundError(f"Few-shot image not found. Tried: {', '.join(attempted)}")
 
 
 def few_shots_collection(k: int | None = None):
@@ -110,5 +155,55 @@ def few_shots_collection(k: int | None = None):
         "evidence": "The grape leaf underside shows abundant rounded protrusions—typical galls caused by phylloxera feeding. The uniform, blister-like swellings are distinct from fungal or bacterial symptoms and clearly indicate insect-induced gall formation on the lower leaf surface."
     }, ensure_ascii=False))
     collection.append((user9, ai9))
+
+    user10 = HumanMessage(content=[
+        {"type": "image_url", "image_url": {"url": image_url(HEALTHY_FEWSHOT_IMAGE)}},
+        {
+            "type": "text",
+            "text": (
+                "Task: Determine whether the grape leaf is healthy or diseased. "
+                "If healthy, label the disease as \"healthy\". "
+                "Provide JSON only."
+            )
+        }
+    ])
+
+    ai10 = AIMessage(content=json.dumps({
+        "disease": "healthy",
+        "confidence": 0.92,
+        "severity": "none",
+        "indicators": [
+            "uniform green coloration",
+            "absence of spots or lesions",
+            "smooth leaf surface",
+            "intact leaf margins"
+        ],
+        "regions": ["entire leaf"],
+        "differentials": [
+            {
+                "candidates": ["downy mildew"],
+                "reason_less_likely": "No oil-like spots or chlorosis are visible on the leaf surface."
+            }
+        ],
+        "recommended_checks": [
+            "monitor leaves over the next 7–10 days",
+            "inspect underside for early sporulation",
+            "maintain routine vineyard scouting"
+        ],
+        "evidence": (
+            "The grape leaf shows uniform green pigmentation across the lamina, "
+            "with no visible lesions, discoloration, deformities, or surface growth. "
+            "Vein structure is regular and intact, and the margins are smooth without "
+            "curling or necrosis. The absence of oil spots, powdery residue, galls, "
+            "or tissue collapse supports a healthy classification. These visual "
+            "characteristics are consistent with a physiologically normal grape leaf."
+        ),
+        "references": [
+            "Healthy grape leaves exhibit uniform color and intact margins",
+            "Absence of lesions and surface growth indicates no active disease"
+        ]
+    }, ensure_ascii=False))
+
+    collection.append((user10, ai10))
 
     return collection[:k] if k else collection
