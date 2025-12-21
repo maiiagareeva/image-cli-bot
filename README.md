@@ -9,68 +9,142 @@ Prepares images (512x512) and passes them to LangChain API (handled by teammate)
 - CLI with prompt and image arguments
 - Ready for LangChain integration
 
-## Setup
+# project structure
 
-## WSL/Linux/macOS
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install -U pip wheel setuptools
-pip install -r requirements.txt
+```
+.
+├── NGLD/                          # Dataset: Niphad Grape Leaf Disease
+│   ├── Downy_Mildew/
+│   │   ├── Downy Mildew_1.jpg
+│   │   ├── Downy Mildew_1.txt
+│   │   ├── Downy Mildew_1.teacher.json
+│   │   ├── Downy Mildew_2.jpg
+│   │   ├── Downy Mildew_2.txt
+│   │   ├── Downy Mildew_2.teacher.json
+│   │   └── ...
+│   │
+│   └── Healthy_Leaves/
+│       ├── Healthy Leaves_1.jpg
+│       ├── Healthy Leaves_1.txt
+│       ├── Healthy Leaves_1.teacher.json
+│       ├── Healthy Leaves_2.jpg
+│       ├── Healthy Leaves_2.txt
+│       ├── Healthy Leaves_2.teacher.json
+│       └── ...
+│
+├── lora_demo/                     # Core project code
+│   ├── examples/
+│   │
+│   ├── results/
+│   │
+│   ├── qwen1.5-7b-leaf-lora/
+│   ├── qwen15-4b-leaf-lora/
+│   ├── qwen3-1.7b-guanaco/
+│   ├── Mistral-7B-Instruct-v0.2-leaf-lora/
+│   │
+│   ├── chatbot.py
+│   ├── finetune_chatbot.py        #LoRA fine-tuning script
+│   ├── fine_tune_chatbot_cache.py
+│   ├── huggingface_lora_training.py # HF Trainer-based LoRA pipeline
+│   │
+│   ├── clip_zero_shot.py
+│   ├── few_shots.py
+│   ├── get_topk_evidence.py
+│   │
+│   ├── metadata_clean.csv
+│   ├── metadata_manifest.py
+│   ├── classes.yaml               # Class label definitions
+│   │
+│   ├── requirements.txt
+│   ├── torch_requirements.txt
+│   └── __pycache__/
+│
+├── server.py
 ```
 
-## windows powershell
+# run reference on MSI
 
-```Powershell
+```bash
+ssh xxxx1234@agate.msi.umn.edu
+```
+
+```bash
+conda activate xxx
+```
+
+```bash
+cd lora_demo
+```
+
+```bash
+python huggingface_lora_training.py
+```
+
+```bash
+python fine_tune_chatbot_cache.py --image /users/4/xxxx1234/NGLD/Downy_Mildew/Downy_Mildew_1.JPG
+```
+
+# run on personal computer
+
+## 1）venv
+
+```bash
 python -m venv .venv
-.venv\Scripts\Activate.ps1
+source .venv/Scripts/activate
 python -m pip install -U pip wheel setuptools
-pip install pillow==11.3.0 python-dotenv langchain-core langchain-openai pytest
 ```
 
-## Mock mode run
-
-## WSL
+## 2） CUDA 12.1 --- PyTorch
 
 ```bash
-export USE_MOCK=1
-python app.py --prompt "Classify the leaf disease and explain why." --image examples/leaf.jpg
+pip install torch==2.5.1+cu121 torchvision==0.20.1+cu121 torchaudio==2.5.1+cu121 \
+  --index-url https://download.pytorch.org/whl/cu121
 ```
 
-## real API call
+## 3）
 
 ```bash
-export USE_MOCK=0
-python app.py --prompt "..." --image data/test.jpg
+pip install pillow==11.3.0 python-dotenv langchain-core langchain-openai pytest transformers PyYAML safetensors
+pip install "huggingface_hub[cli]" --upgrade
 ```
-
-## CLIP integration
 
 ```bash
-python metadata_manifest.py
-
-python - <<'PY'
-from get_topk_evidence import clip_topk_evidence
-print(clip_topk_evidence("examples/leaf.jpg", k=3))
-PY
-
+cat > requirements.txt << 'REQ'
+pillow==11.3.0
+python-dotenv
+langchain-core
+langchain-openai
+pytest
+transformers
+PyYAML
+safetensors
+torch==2.5.1+cu121
+torchvision==0.20.1+cu121
+torchaudio==2.5.1+cu121
+REQ
+# pip install -r requirements.txt --index-url https://download.pytorch.org/whl/cu121
 ```
 
-## mock
+## 4）LM Studio
+
+- open **OpenAI Compatible Server** → **Start Server**
+- copy（`http://127.0.0.1:1234/v1`）
+- open `http://127.0.0.1:1234/v1/models` in google
+
+## 5） `.env`
 
 ```bash
-export USE_MOCK=1
-python app.py --prompt "Classify the leaf disease and explain why." --image examples/leaf.jpg
+cat > .env << 'ENV'
+USE_MOCK=0
+LLM_BACKEND=local
+OPENAI_API_KEY=sk-local-dummy
+LLM_MODEL=qwen2.5-vl-7b-instruct
+OPENAI_BASE_URL=http://127.0.0.1:1234/v1
+OPENAI_MODEL=gpt-4o-mini
+ENV
 ```
 
-## real api call
-
-```bash
-export USE_MOCK=0
-export OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxx
-python app.py --prompt "Classify the leaf disease and explain why." --image examples/leaf.jpg
-```
+## 6）run preprocess launch & common_words
 
 # preprocess launch
 
@@ -84,8 +158,6 @@ python preprocess.py \
   --result-out preprocess_result.json
 ```
 
-# common_words launch
-
 ```bash
 python common_words.py \
   --root "leaf_disease_vlm" \
@@ -96,67 +168,38 @@ python common_words.py \
   --result-out preprocess_result.json
 ```
 
-## RUN CLIP AND PIPELINE TEST ALL IN ONCE
+## 7）
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install -U pip wheel setuptools
-pip install -r requirements.txt
+python metadata_manifest.py
 ```
+
+## 8）run CLIP evidence
 
 ```bash
 python - <<'PY'
 from get_topk_evidence import clip_topk_evidence
-print(clip_topk_evidence("examples/leaf.jpg", k=3))
+print(clip_topk_evidence("examples/leaf.jpeg", k=3))
 PY
 ```
 
+## 9）run local VLM
+
 ```bash
-export USE_MOCK=1
-python app.py --prompt "Classify the leaf disease and explain why." --image examples/leaf.jpg
+python app.py --backend local --model qwen2.5-vl-7b-instruct \
+  --prompt "Identify grape leaf disease." --image examples/leaf.jpeg
 ```
 
+## 10）run local LLM
+
 ```bash
-python - <<'PY'
-import os, sys, csv
-sys.path.append(os.getcwd())
-from clip_zero_shot import image_text_topk
+python app.py --backend local --model qwen2.5:7b-instruct \
+  --prompt "Identify grape leaf disease." --image examples/leaf.jpeg
+```
 
-CSV="metadata_clean.csv"; K=3
+## 11）openai gpt4o-mini
 
-def map_from_text(t: str) -> str:
-    t = t.lower()
-    if "phylloxera" in t: return "phylloxera"
-    if "healthy"    in t: return "healthy"
-    if "downy"      in t:
-        if any(k in t for k in ["underside","bottom","lower", "abaxial"]):
-            return "downy_early_leaf_bottom"
-        if any(k in t for k in ["upper","top","adaxial"]):
-            return "downy_early_leaf_top"
-        return "downy"
-    return "unknown"
-
-tot=ok1=okK=0
-with open(CSV, newline="", encoding="utf-8") as f:
-    for r in csv.DictReader(f):
-        img = r["image_path"]
-        if r["split"]!="test" or not os.path.exists(img):
-            continue
-        texts=[t for t in r["texts"].split("|") if t.strip()]
-        texts+=["healthy leaf: uniform green, no spots, no powder"]
-        topk = image_text_topk([img], texts, K)[0]
-
-        preds = [map_from_text(t) for t,_ in topk]
-        gt    = r["class_name"].lower()
-
-        ok1 += int(preds[0]==gt)
-
-        coarse_gt = "downy" if gt.startswith("downy") else gt
-        coarse_preds = [("downy" if p.startswith("downy") else p) for p in preds]
-        okK += int(coarse_gt in coarse_preds)
-        tot += 1
-
-print(f"Test={tot}  Acc@1={ok1/max(tot,1):.3f}  Acc@{K}={okK/max(tot,1):.3f}")
-PY
+```bash
+python app.py --backend local --model gpt-4o-mini \
+  --prompt "Identify the leaf disease." --image examples/leaf.jpeg
 ```
