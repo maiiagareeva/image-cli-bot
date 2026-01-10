@@ -25,7 +25,7 @@ class DataArguments:
     max_answer_len:int
 
 @dataclass
-class TrainingArguments:
+class TrainingArg:
     out_dir:str
     num_train_epochs:int
     per_device_train_batch_size:int
@@ -36,7 +36,7 @@ class TrainingArguments:
     save_steps:int
     evaluation_strategy:str
     eval_steps:int
-    fp16=bool
+    fp16:bool
     report_to:str
     gradient_checkpointing:bool
     remove_unused_columns:bool
@@ -49,7 +49,7 @@ class TrainingArguments:
 @dataclass
 class StageArguments:
     name:str
-    mapping_cpkt:str
+    mapping_ckpt:str
 
 @dataclass
 class GlobalArguments:
@@ -62,7 +62,7 @@ def parse_yaml(path):
         gloabl_:GlobalArguments
         model:ModelArguments
         data:DataArguments
-        training:TrainingArguments
+        training:TrainingArg
         stage:StageArguments
 
     parser=HfArgumentParser(ConfigArgs)

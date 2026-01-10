@@ -43,4 +43,4 @@ training:
 
 stage:
   name: MAPPING_TRAIN
-  mapping_cpkt: ""
+  mapping_ckpt: ""

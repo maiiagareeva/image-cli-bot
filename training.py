@@ -10,7 +10,12 @@ YAML_DIR="configs/train.yaml"
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
 def main():
-    global_config,model_config,data_config,training_config,stage_config=parse_yaml(YAML_DIR)
+    cfg=parse_yaml(YAML_DIR)
+    global_config=cfg.global_
+    model_config=cfg.model
+    data_config=cfg.data
+    training_config=cfg.training
+    stage_config=cfg.stage
 
     set_seed(global_config.seed)
     if global_config.deterministic:
@@ -22,16 +27,22 @@ def main():
     tokenizer.padding_side="right"
 
     clip_processor=CLIPProcessor.from_pretrained(model_config.clip_model)
-    tokenizer=AutoTokenizer.from_pretrained(model_config.base_model,trust_remote_code=True)
 
-    model,mapping_net=build_model(model_config)
+    model,mapping_net=build_model(global_config,
+                                  model_config,
+                                  data_config,
+                                  training_config,
+                                  stage_config,
+                                  device,
+                                )
+
     collator=DataCollator(
         tokenizer=tokenizer,
         clip_processor=clip_processor,
         max_prompt_len=data_config.max_prompt_len,
         max_answer_len=data_config.max_answer_len,
     )
-    datasets=Dataset(data_config)
+    datasets=VLMDataset(data_config)
     trainer=gopher_trainer(model,datasets,collator,training_config)
 
     #test

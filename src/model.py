@@ -107,7 +107,7 @@ def build_model(global_,model,data,training,stage,device):
     #mapping net
     d_clip=clip_model.config.projection_dim
     d_qwen=qwen.config.hidden_size
-    mapping_net=MappingNet(d_clip=d_clip,hidden_size=d_qwen,prefix_len=model.prefix_len).to(device)
+    mapping_net=MappingNet(d_clip=d_clip,hidden_size=d_qwen,p=model.prefix_len).to(device)
 
     #training stage
     if stage.name=="MAPPING_TRAIN":
