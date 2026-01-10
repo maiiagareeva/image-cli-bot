@@ -1,4 +1,7 @@
 from transformers import Trainer, TrainingArguments
+from src.metrics import *
+from src.VLMTrainer import *
+from transformers import AutoTokenizer
 
 def gopher_trainer(model,datasets,collator,trainning_cfg):
     train_ds=datasets.train_ds
@@ -24,10 +27,14 @@ def gopher_trainer(model,datasets,collator,trainning_cfg):
         save_strategy=trainning_cfg.save_strategy,
     )
 
-    return Trainer(
+    tokenizer=collator.tokenizer
+    compute_metrics=build_compute_metrics(tokenizer)
+    
+    return VLMTrainer(
         model=model,
         args=args,
         train_dataset=train_ds,
         eval_dataset=eval_ds,
         data_collator=collator,
+        compute_metrics=compute_metrics,
     )

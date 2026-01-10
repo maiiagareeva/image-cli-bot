@@ -56,13 +56,6 @@ class QwenwithPrefix(nn.Module):
         prefix_labels=torch.full((B,self.prefix_len),-100,dtype=labels.dtype,device=DEVICE)
         labels=torch.cat([prefix_labels,labels],dim=1)
 
-        #test
-        loss_tokens=(labels!=-100).sum()
-        total_tokens=labels.numel()
-        print("loss_tokens: ",loss_tokens.item(),
-              "ratio: ",(loss_tokens/total_tokens).item()
-              )
-
         return self.qwen(
             inputs_embeds=inputs_embeds,
             attention_mask=attention_mask,
