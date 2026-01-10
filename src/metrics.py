@@ -35,9 +35,9 @@ def build_compute_metrics(tokenizer):
         )
 
         return{
-            "rouge1": rouge_scr["rouge1"],
-            "rouge2": rouge_scr["rouge2"],
-            "rougeL": rouge_scr["rougeL"],
-            "bleu": bleu_scr["score"],
+            "rouge1": float(rouge_scr["rouge1"]),
+            "rouge2": float(rouge_scr["rouge2"]),
+            "rougeL": float(rouge_scr["rougeL"]),
+            "bleu": float(bleu_scr["score"]),
         }
     return compute_metrics

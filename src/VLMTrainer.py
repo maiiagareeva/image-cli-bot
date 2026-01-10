@@ -28,29 +28,31 @@ class VLMTrainer(Trainer):
         model.eval()
 
         with torch.no_grad():
-            clip_emb=self.clip.get_image_features(pixel_values=pixel_values)
+            clip_emb=model.clip.get_image_features(pixel_values=pixel_values)
             clip_emb=clip_emb/(clip_emb.norm(dim=-1,keepdim=True)+1e-6)
 
-        prefix_embeds=model.mapping_net(clip_emb)
+            prefix_embeds=model.mapping_net(clip_emb)
 
-        embed_layer=model.qwen.get_input_embeddings()
-        token_embeds=embed_layer(input_ids)
+            embed_layer=model.qwen.get_input_embeddings()
+            token_embeds=embed_layer(input_ids)
 
-        inputs_embeds=torch.cat([prefix_embeds,token_embeds],dim=1)
+            inputs_embeds=torch.cat([prefix_embeds,token_embeds],dim=1)
 
-        B=input_ids.size(0)
+            B=input_ids.size(0)
+            P=prefix_embeds.size(1)
 
-        prefix_attention=torch.ones((B,self.prefix_len),dtype=attention_mask.dtype,device=DEVICE)
-        attention_mask=torch.cat([prefix_attention,attention_mask],dim=1)
+            prefix_attention=torch.ones((B,model.prefix_len),dtype=attention_mask.dtype,device=DEVICE)
+            attention_mask=torch.cat([prefix_attention,attention_mask],dim=1)
 
-        prefix_labels=torch.full((B,self.prefix_len),-100,dtype=labels.dtype,device=DEVICE)
-        labels=torch.cat([prefix_labels,labels],dim=1)
+            prefix_labels=torch.full((B,model.prefix_len),-100,dtype=labels.dtype,device=DEVICE)
+            labels=torch.cat([prefix_labels,labels],dim=1)
 
-        genrated_ids=model.qwen.generate(
-            inputs_embeds=inputs_embeds,
-            attention_mask=attention_mask,
-            max_new_tokens=200,
-            do_sample=False,
-            use_cache=True,
-        )
+            genrated_ids=model.qwen.generate(
+                inputs_embeds=inputs_embeds,
+                attention_mask=attention_mask,
+                max_new_tokens=200,
+                do_sample=False,
+                use_cache=True,
+            )
+            
         return None,genrated_ids,labels

@@ -29,7 +29,7 @@ def gopher_trainer(model,datasets,collator,trainning_cfg):
 
     tokenizer=collator.tokenizer
     compute_metrics=build_compute_metrics(tokenizer)
-    
+
     return VLMTrainer(
         model=model,
         args=args,
@@ -37,4 +37,5 @@ def gopher_trainer(model,datasets,collator,trainning_cfg):
         eval_dataset=eval_ds,
         data_collator=collator,
         compute_metrics=compute_metrics,
+        tokenizer=tokenizer,
     )
