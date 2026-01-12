@@ -43,7 +43,7 @@ def main():
         max_answer_len=data_config.max_answer_len,
     )
     datasets=VLMDataset(data_config)
-    trainer=gopher_trainer(model,datasets,collator,training_config,mapping_net)
+    trainer=gopher_trainer(model,datasets,collator,training_config,mapping_net,stage_config.name)
 
     #test
     before = mapping_net.net[0].weight.detach().clone()

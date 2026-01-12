@@ -3,7 +3,7 @@ from src.metrics import *
 from src.VLMTrainer import *
 from transformers import AutoTokenizer
 from src.callbacks import *
-def gopher_trainer(model,datasets,collator,trainning_cfg,mapping_net):
+def gopher_trainer(model,datasets,collator,trainning_cfg,mapping_net,stage_name):
     train_ds=datasets.train_ds
     eval_ds=datasets.eval_ds
 
@@ -29,7 +29,7 @@ def gopher_trainer(model,datasets,collator,trainning_cfg,mapping_net):
 
     tokenizer=collator.tokenizer
     compute_metrics=build_compute_metrics(tokenizer)
-    callbacks=[MappingCallback(mapping_net)]
+    callbacks=[MappingCallback(mapping_net,filename=f"mapping_{stage_name}.pt")]
 
     return VLMTrainer(
         model=model,
