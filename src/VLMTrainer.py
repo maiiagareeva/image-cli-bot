@@ -18,6 +18,16 @@ class VLMTrainer(Trainer):
         return (loss, outputs) if return_outputs else loss
     
     def prediction_step(self, model, inputs, prediction_loss_only, ignore_keys = None):
+        model.eval()
+
+        if prediction_loss_only:
+            return super().prediction_step(
+                model,
+                inputs,
+                prediction_loss_only,
+                ignore_keys,
+            )
+        
         labels=inputs.get("labels",None)
 
         input_ids=inputs["input_ids"]
@@ -25,7 +35,6 @@ class VLMTrainer(Trainer):
         pixel_values=inputs["pixel_values"]
 
         DEVICE=input_ids.device
-        model.eval()
 
         with torch.no_grad():
             clip_emb=model.clip.get_image_features(pixel_values=pixel_values)
@@ -38,14 +47,11 @@ class VLMTrainer(Trainer):
 
             inputs_embeds=torch.cat([prefix_embeds,token_embeds],dim=1)
 
-            B=input_ids.size(0)
-            P=prefix_embeds.size(1)
+            B,P,H=prefix_embeds.shape
+            T=input_ids.shape[1]
 
-            prefix_attention=torch.ones((B,model.prefix_len),dtype=attention_mask.dtype,device=DEVICE)
+            prefix_attention=torch.ones((B,P),dtype=attention_mask.dtype,device=DEVICE)
             attention_mask=torch.cat([prefix_attention,attention_mask],dim=1)
-
-            prefix_labels=torch.full((B,model.prefix_len),-100,dtype=labels.dtype,device=DEVICE)
-            labels=torch.cat([prefix_labels,labels],dim=1)
 
             genrated_ids=model.qwen.generate(
                 inputs_embeds=inputs_embeds,
@@ -54,5 +60,7 @@ class VLMTrainer(Trainer):
                 do_sample=False,
                 use_cache=True,
             )
-            
-        return None,genrated_ids,labels
+
+            generated_res=genrated_ids[:,P+T:]
+
+        return None,generated_res,labels
