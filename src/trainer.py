@@ -25,6 +25,14 @@ def gopher_trainer(model,datasets,collator,trainning_cfg,mapping_net,stage_name)
         dataloader_pin_memory=trainning_cfg.dataloader_pin_memory,
         save_safetensors=trainning_cfg.save_safetensors,
         save_strategy=trainning_cfg.save_strategy,
+        eval_delay=trainning_cfg.eval_delay,
+        dataloader_drop_last=trainning_cfg.dataloader_drop_last,
+        dataloader_num_workers=trainning_cfg.dataloader_num_workers,
+        prediction_loss_only=trainning_cfg.prediction_loss_only,
+        load_best_model_at_end=trainning_cfg.load_best_model_at_end,
+        metric_for_best_model=trainning_cfg.metric_for_best_model,
+        greater_is_better=trainning_cfg.greater_is_better,
+        label_names=trainning_cfg.label_names,
     )
 
     tokenizer=collator.tokenizer

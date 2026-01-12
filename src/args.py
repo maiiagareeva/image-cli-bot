@@ -46,6 +46,14 @@ class TrainingArg:
     new_model_dir:str
     mapping_dir:str
     resume_from_checkpoint:str
+    eval_delay:int
+    dataloader_drop_last:bool
+    dataloader_num_workers:int
+    prediction_loss_only:bool
+    load_best_model_at_end:bool
+    metric_for_best_model:str
+    greater_is_better:bool
+    label_names:List[str]
 
 @dataclass
 class StageArguments:

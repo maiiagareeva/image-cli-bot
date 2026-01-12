@@ -41,6 +41,14 @@ training:
   new_model_dir: ./qwen3-1.7B-ngld-lora-1
   mapping_dir: mapping.pt
   resume_from_checkpoint: null
+  eval_delay: 100
+  dataloader_drop_last: false
+  dataloader_num_workers: 4
+  prediction_loss_only: false
+  load_best_model_at_end: false
+  metric_for_best_model: rougeL
+  greater_is_better: true
+  label_names: ["labels"]
 
 stage:
   name: MAPPING_TRAIN
