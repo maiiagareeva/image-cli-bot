@@ -43,12 +43,12 @@ def main():
         max_answer_len=data_config.max_answer_len,
     )
     datasets=VLMDataset(data_config)
-    trainer=gopher_trainer(model,datasets,collator,training_config)
+    trainer=gopher_trainer(model,datasets,collator,training_config,mapping_net)
 
     #test
     before = mapping_net.net[0].weight.detach().clone()
     #train
-    trainer.train()
+    trainer.train(resume_from_checkpoint=training_config.resume_from_checkpoint)
     #test
     after = mapping_net.net[0].weight.detach()
     print(torch.norm(after - before))
