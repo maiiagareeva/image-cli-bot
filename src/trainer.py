@@ -2,8 +2,8 @@ from transformers import Trainer, TrainingArguments
 from src.metrics import *
 from src.VLMTrainer import *
 from transformers import AutoTokenizer
-
-def gopher_trainer(model,datasets,collator,trainning_cfg):
+from src.callbacks import *
+def gopher_trainer(model,datasets,collator,trainning_cfg,mapping_net):
     train_ds=datasets.train_ds
     eval_ds=datasets.eval_ds
 
@@ -29,6 +29,7 @@ def gopher_trainer(model,datasets,collator,trainning_cfg):
 
     tokenizer=collator.tokenizer
     compute_metrics=build_compute_metrics(tokenizer)
+    callbacks=[MappingCallback(mapping_net)]
 
     return VLMTrainer(
         model=model,
@@ -38,4 +39,5 @@ def gopher_trainer(model,datasets,collator,trainning_cfg):
         data_collator=collator,
         compute_metrics=compute_metrics,
         tokenizer=tokenizer,
+        callbacks=callbacks,
     )

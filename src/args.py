@@ -45,6 +45,7 @@ class TrainingArg:
     save_strategy:str
     new_model_dir:str
     mapping_dir:str
+    resume_from_checkpoint:str
 
 @dataclass
 class StageArguments:
