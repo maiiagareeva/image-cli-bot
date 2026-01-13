@@ -11,6 +11,7 @@ from langchain_core.output_parsers import JsonOutputParser,StrOutputParser
 import argparse
 from pydantic import BaseModel
 from langchain_core.prompts import ChatPromptTemplate
+from src.ICL.fewshot_utils import *
 
 device="cuda" if torch.cuda.is_available() else "cpu"
 PREFIX_LEN=20
@@ -22,6 +23,8 @@ USE_LORA = True
 BASE_MODEL_ID = "Qwen/Qwen3-1.7B"
 LORA_MODEL_PATH = "qwen3-1.7B-ngld-lora"
 
+k=3
+FEW_SHOT_POOL=load_fewshot_pool("leaf_disease_vlm")
 
 print("Starting CLI Chatbot...")
 if USE_LORA:
@@ -163,7 +166,7 @@ class LeafDiseaseDetection(BaseModel):
     regions: Optional[List[str]] = Field(default=None, description="leaf regions involved")
     recommended_checks: List[str] = Field(..., min_length=3)
     evidence: str = Field(..., description="≥120 words integrated rationale")
-    references: Optional[List[str]] = Field(default=None, description="factual bullets")
+    # references: Optional[List[str]] = Field(default=None, description="factual bullets")
 
 JSON_PARSER = JsonOutputParser(pydantic_object=LeafDiseaseDetection)
 STRING_PARSER=StrOutputParser()
@@ -178,7 +181,7 @@ def diagnosis_to_json_str(diagnosis):
     return json.dumps(diagnosis, indent=2, ensure_ascii=False)
 
 
-def build_prompt_text(user_input):
+def build_prompt_text(user_input,few_shots=None,k=3):
     sys_content = (
         "You are an expert grape-leaf pathologist.\n"
         "Return STRICTLY a single JSON object conforming to the given schema "
@@ -192,17 +195,20 @@ def build_prompt_text(user_input):
         "  indicators (>=4 short bullet strings), regions (optional list),\n"
         "  recommended_checks (>=3 items),\n"
         "  evidence (>=120 words, one paragraph, objective visual rationale),\n"
-        "  references (optional short factual bullets).\n"
+        # "  references (optional short factual bullets).\n"
     )
 
-    humsn_msg = (
+    fewshot_block=""
+    if few_shots:
+        fewshot_block=format_fewshots(few_shots,k=k)
+
+    humsn_msg=(
         "### Current Query\n"
-        f"{user_input}\n\n"
-        f"{schema_hint}"
+        f"{user_input}\n"
         "Output: JSON ONLY.\n"
     )
 
-    prompt = sys_content + humsn_msg
+    prompt = "\n".join([sys_content ,schema_hint, fewshot_block,humsn_msg])
     return prompt
 
 
@@ -215,7 +221,7 @@ def identify_run(image_path,user_input = "Identify the grape leaf disease."):
 
     to_prompt = RunnableLambda(
         lambda d: {"image":d["image"],
-                "prompt":build_prompt_text(d["user_input"])}
+                "prompt":build_prompt_text(d["user_input"],few_shots=select_fewshots(FEW_SHOT_POOL,k=k),k=k)}
     )
 
     chain = prep | to_prompt | LLM | JSON_PARSER
