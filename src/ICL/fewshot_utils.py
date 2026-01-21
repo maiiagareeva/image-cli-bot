@@ -45,6 +45,7 @@ def format_fewshots(fewshots):
     for fewshot in fewshots:
         blocks.append(
             "### Example Output\n"
+            "This is an example diagnosis for a DIFFERENT leaf image.\n"
             +json.dumps(fewshot,ensure_ascii=False)
             +"\n"
         )

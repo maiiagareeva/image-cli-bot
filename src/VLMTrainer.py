@@ -48,7 +48,8 @@ class VLMTrainer(Trainer):
             inputs_embeds=torch.cat([prefix_embeds,token_embeds],dim=1)
 
             B,P,H=prefix_embeds.shape
-            T=input_ids.shape[1]
+            T_pad=input_ids.shape[1]
+            T=attention_mask.sum(dim=1).max().item()
 
             prefix_attention=torch.ones((B,P),dtype=attention_mask.dtype,device=DEVICE)
             attention_mask=torch.cat([prefix_attention,attention_mask],dim=1)

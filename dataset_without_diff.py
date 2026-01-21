@@ -8,6 +8,12 @@ ROOT=Path("NGLD")
 
 rows=[]
 
+disease_alias_map={
+    "downy_early_leaf_top":"Downy Mildew",
+    "downy_early_leaf_bottom":"Downy Mildew",
+    "healthy":"Healthy",
+}
+
 for class_folder in ["Healthy Leaves","Downy Mildew"]:
     folder=ROOT/class_folder
 
@@ -42,6 +48,13 @@ for _,r in images_DF.iterrows():
 
     teacher.pop("differentials", None)
     teacher.pop("references",None)
+    teacher.pop("confidence",None)
+    teacher.pop("severity",None)
+
+    raw_disease=teacher.get("disease","").strip().lower()
+
+    if raw_disease in disease_alias_map:
+        teacher["disease"]=disease_alias_map[raw_disease]
 
     samples.append({
         "sample_id": f"{image_id}|teacher",

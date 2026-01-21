@@ -17,8 +17,8 @@ model:
 
 data:
   dataset: qingwuuu/ngld-grape-leaf-vlm-w-img-without-diff-ref
-  max_prompt_len: 256
-  max_answer_len: 256
+  max_prompt_len: 64
+  max_answer_len: 1539
 
 training:
   out_dir: ./results_mm_1
@@ -32,6 +32,7 @@ training:
   evaluation_strategy: steps
   eval_steps: 200
   fp16: true
+  bf16: false
   report_to: none
   gradient_checkpointing: true
   remove_unused_columns: false
