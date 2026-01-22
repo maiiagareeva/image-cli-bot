@@ -28,7 +28,7 @@ def main():
 
     clip_processor=CLIPProcessor.from_pretrained(model_config.clip_model)
 
-    model,mapping_net=build_model(global_config,
+    model,qformer=build_model(global_config,
                                   model_config,
                                   data_config,
                                   training_config,
@@ -43,19 +43,19 @@ def main():
         max_answer_len=data_config.max_answer_len,
     )
     datasets=VLMDataset(data_config)
-    trainer=gopher_trainer(model,datasets,collator,training_config,mapping_net,stage_config.name)
+    trainer=gopher_trainer(model,datasets,collator,training_config,qformer,stage_config.name)
 
     #test
-    before = mapping_net.net[0].weight.detach().clone()
+    before = qformer.query_tokens.detach().clone()
     #train
     trainer.train(resume_from_checkpoint=training_config.resume_from_checkpoint)
     #test
-    after = mapping_net.net[0].weight.detach()
+    after = qformer.query_tokens.detach()
     print(torch.norm(after - before))
 
     model.qwen.save_pretrained(training_config.new_model_dir)
     tokenizer.save_pretrained(training_config.new_model_dir)
-    torch.save(mapping_net.state_dict(),os.path.join(training_config.new_model_dir,training_config.mapping_dir))
+    torch.save(qformer.state_dict(),os.path.join(training_config.new_model_dir,training_config.qformer_dir))
     print("save to: ",training_config.new_model_dir)
 
 if __name__=="__main__":
