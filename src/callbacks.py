@@ -2,9 +2,9 @@ import os
 import torch
 from transformers import TrainerCallback
 
-class MappingCallback(TrainerCallback):
-    def __init__(self,mapping_net,filename="mapping.pt"):
-        self.mapping_net=mapping_net
+class QFomerCallback(TrainerCallback):
+    def __init__(self,qformer,filename="qformer.pt"):
+        self.qformer=qformer
         self.filename=filename
     
     def on_save(self, args, state, control, **kwargs):
@@ -15,5 +15,5 @@ class MappingCallback(TrainerCallback):
                               f"checkpoint-{state.global_step}")
         os.makedirs(ckpt_dir,exist_ok=True)
         path=os.path.join(ckpt_dir,self.filename)
-        torch.save(self.mapping_net.state_dict(),path)
+        torch.save(self.qformer.state_dict(),path)
         return control

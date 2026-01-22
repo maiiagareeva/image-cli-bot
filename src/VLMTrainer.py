@@ -37,10 +37,14 @@ class VLMTrainer(Trainer):
         DEVICE=input_ids.device
 
         with torch.no_grad():
-            clip_emb=model.clip.get_image_features(pixel_values=pixel_values)
-            clip_emb=clip_emb/(clip_emb.norm(dim=-1,keepdim=True)+1e-6)
+            vision_outputs=model.clip.vision_model(pixel_values=pixel_values)
+            image_embeds=vision_outputs.last_hidden_state[:,1:,:]
 
-            prefix_embeds=model.mapping_net(clip_emb)
+            B,N,_=image_embeds.shape
+            image_atts=torch.ones((B,N),dtype=torch.long,device=image_embeds.device)
+
+            query_embeds=model.qformer(image_embeds,image_atts)
+            prefix_embeds=model.projector(query_embeds)
 
             embed_layer=model.qwen.get_input_embeddings()
             token_embeds=embed_layer(input_ids)

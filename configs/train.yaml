@@ -40,7 +40,7 @@ training:
   save_safetensors: false
   save_strategy: steps
   new_model_dir: ./qwen3-1.7B-ngld-lora-1
-  mapping_dir: mapping.pt
+  qformer_dir: qformer.pt
   resume_from_checkpoint: null
   eval_delay: 100
   dataloader_drop_last: false
@@ -52,5 +52,5 @@ training:
   label_names: ["labels"]
 
 stage:
-  name: MAPPING_TRAIN
-  mapping_ckpt: ""
+  name: QUERY_TRAIN
+  qformer_ckpt: ""

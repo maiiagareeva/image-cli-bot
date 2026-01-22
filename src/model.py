@@ -4,30 +4,14 @@ from peft import LoraConfig,get_peft_model,prepare_model_for_kbit_training
 from transformers import CLIPModel,CLIPProcessor
 from transformers import AutoModelForCausalLM,AutoTokenizer,BitsAndBytesConfig,TrainingArguments,Trainer
 from src.utils import *
-
-class MappingNet(nn.Module):
-    def __init__(self,d_clip,hidden_size,p):
-        super().__init__()
-        self.p=p
-        self.hidden_size=hidden_size
-        self.net=nn.Sequential(
-            nn.Linear(d_clip,4*hidden_size),
-            nn.GELU(),
-            nn.Linear(4*hidden_size,p*hidden_size),
-        )
-    def forward(self,clip_emb):
-        B=clip_emb.shape[0]
-        x=self.net(clip_emb)
-        x=x.view(B,self.p,self.hidden_size)
-        return x
-    
+from QFormer.qformer import QFormer
 
 class QwenwithPrefix(nn.Module):
-    def __init__(self,qwen,clip_model,mapping_net,prefix_len):
+    def __init__(self,qwen,clip_model,qformer,prefix_len):
         super().__init__()
         self.qwen=qwen
         self.clip=clip_model
-        self.mapping_net=mapping_net
+        self.qformer=qformer
         self.prefix_len=prefix_len
 
         for p in self.clip.parameters():
@@ -38,17 +22,22 @@ class QwenwithPrefix(nn.Module):
         DEVICE=input_ids.device
 
         with torch.no_grad():
-            clip_emb=self.clip.get_image_features(pixel_values=pixel_values)
-            clip_emb=clip_emb/(clip_emb.norm(dim=-1,keepdim=True)+1e-6)
+            vision_outputs = self.clip.vision_model(pixel_values=pixel_values)
+            image_embeds = vision_outputs.last_hidden_state[:,1:,:]
+        
+            B, N, _ = image_embeds.shape
+            image_atts = torch.ones((B, N), dtype=torch.long, device=image_embeds.device)
 
-        prefix_embeds=self.mapping_net(clip_emb)
+        query_embeds =self.qformer(image_embeds,image_atts)
 
         embed_layer=self.qwen.get_input_embeddings()
         token_embeds=embed_layer(input_ids)
 
-        inputs_embeds=torch.cat([prefix_embeds,token_embeds],dim=1)
+        inputs_embeds=torch.cat([query_embeds ,token_embeds],dim=1)
 
         B=input_ids.size(0)
+
+        self.prefix_len=self.qformer.num_query_tokens
 
         prefix_attention=torch.ones((B,self.prefix_len),dtype=attention_mask.dtype,device=DEVICE)
         attention_mask=torch.cat([prefix_attention,attention_mask],dim=1)
@@ -63,7 +52,6 @@ class QwenwithPrefix(nn.Module):
         )
 
 def build_model(global_,model,data,training,stage,device):
-    #Qwen 4bit
     quantization_config=BitsAndBytesConfig(
         load_in_4bit=True,
         bnb_4bit_quant_type="nf4",
@@ -80,7 +68,6 @@ def build_model(global_,model,data,training,stage,device):
     qwen.config.use_cache=False
     qwen=prepare_model_for_kbit_training(qwen)
 
-    #Lora
     lora_config=model.lora
     peft_config=LoraConfig(
         r=lora_config.r,
@@ -92,29 +79,34 @@ def build_model(global_,model,data,training,stage,device):
     )
     qwen=get_peft_model(qwen,peft_config)
 
-    #CLIP
     clip_model=CLIPModel.from_pretrained(model.clip_model).to(device).eval()
     for p in clip_model.parameters():
         p.requires_grad=False
 
-    #mapping net
-    d_clip=clip_model.config.projection_dim
+    d_vision=clip_model.vision_model.config.hidden_zie
     d_qwen=qwen.config.hidden_size
-    mapping_net=MappingNet(d_clip=d_clip,hidden_size=d_qwen,p=model.prefix_len).to(device)
+    qformer=QFormer(
+        num_query_tokens=32,
+        vision_hidden_dim=d_vision,
+        qformer_hidden_dim=768,
+        num_hidden_layers=12,
+        cross_attention_freq= 2,
+        pretrained_bert= "bert-base-uncased"
+        ).to(device)
+    
+    projector=nn.Linear(768,d_qwen).to(device)
 
-    #training stage
-    if stage.name=="MAPPING_TRAIN":
+    if stage.name=="QUERY_TRAIN":
         set_requires_grad(qwen,False)
-        set_requires_grad(mapping_net,True)
+        set_requires_grad(qformer,True)
     else:
-        set_requires_grad(mapping_net,False)
-        mapping_net.load_state_dict(torch.load(stage.mapping_cpkt,map_location=device))
+        set_requires_grad(qformer,False)
+        qformer.load_state_dict(torch.load(stage.qformer_cpkt,map_location=device))
 
     model=QwenwithPrefix(qwen=qwen,
                          clip_model=clip_model,
-                         mapping_net=mapping_net,
+                         qformer=qformer,
                          prefix_len=model.prefix_len
                         )
     
-    return model,mapping_net
-    
+    return model,qformer

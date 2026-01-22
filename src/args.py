@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from transformers import HfArgumentParser
 from typing import Optional,List
+
 @dataclass
 class LoraArguments:
     r:int
@@ -44,7 +45,7 @@ class TrainingArg:
     save_safetensors:bool
     save_strategy:str
     new_model_dir:str
-    mapping_dir:str
+    qformer_dir:str
     resume_from_checkpoint:str
     eval_delay:int
     dataloader_drop_last:bool
@@ -58,7 +59,7 @@ class TrainingArg:
 @dataclass
 class StageArguments:
     name:str
-    mapping_ckpt:str
+    qformer_ckpt:str
 
 @dataclass
 class GlobalArguments:
