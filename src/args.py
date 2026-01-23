@@ -38,6 +38,7 @@ class TrainingArg:
     evaluation_strategy:str
     eval_steps:int
     fp16:bool
+    bf16: bool
     report_to:str
     gradient_checkpointing:bool
     remove_unused_columns:bool
@@ -69,7 +70,7 @@ class GlobalArguments:
 def parse_yaml(path):
     @dataclass
     class ConfigArgs:
-        gloabl_:GlobalArguments
+        global_:GlobalArguments
         model:ModelArguments
         data:DataArguments
         training:TrainingArg

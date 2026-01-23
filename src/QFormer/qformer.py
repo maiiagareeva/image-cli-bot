@@ -6,7 +6,7 @@ class QFormer(nn.Module):
 
     def __init__(
         self,
-        num_query_tokens=32,
+        num_query_tokens,
         vision_hidden_dim=521,
         qformer_hidden_dim=768,
         num_hidden_layers= 12,
@@ -46,8 +46,8 @@ class QFormer(nn.Module):
         image_embeds: (B, N, Dv)  ← CLIP patch / grid features
         image_atts: (B, N)
         """
-
-        image_embeds = image_embeds[:, 1:, :]  # drop CLS 
+        #drop CLS already happedn in QwenwithPrefix forward
+        # image_embeds = image_embeds[:, 1:, :]  # drop CLS 
         query_tokens = self.query_tokens.expand(image_embeds.shape[0], -1, -1)
 
         query_output = self.transformer(

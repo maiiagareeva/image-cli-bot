@@ -8,6 +8,8 @@ def build_compute_metrics(tokenizer):
     def compute_metrics(eval_predict:EvalPrediction):
     
         predictions=eval_predict.predictions
+        if isinstance(predictions, tuple):
+            predictions = predictions[0]
         label_ids=eval_predict.label_ids
         
         pred_text=tokenizer.batch_decode(

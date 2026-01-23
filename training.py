@@ -5,6 +5,7 @@ from src.collator import *
 from src.trainer import *
 from src.dataset import *
 import os
+import torch
 
 YAML_DIR="configs/train.yaml"
 device = "cuda:0" if torch.cuda.is_available() else "cpu"

@@ -38,7 +38,7 @@ def gopher_trainer(model,datasets,collator,trainning_cfg,qformer,stage_name):
 
     tokenizer=collator.tokenizer
     compute_metrics=build_compute_metrics(tokenizer)
-    callbacks=[QFomerCallback(qformer,filename=f"qformer_{stage_name}.pt")]
+    callbacks=[QFormerCallback(qformer,filename=f"qformer_{stage_name}.pt")]
 
     return VLMTrainer(
         model=model,

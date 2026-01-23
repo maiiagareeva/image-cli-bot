@@ -2,7 +2,7 @@ import os
 import torch
 from transformers import TrainerCallback
 
-class QFomerCallback(TrainerCallback):
+class QFormerCallback(TrainerCallback):
     def __init__(self,qformer,filename="qformer.pt"):
         self.qformer=qformer
         self.filename=filename

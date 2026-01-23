@@ -29,15 +29,14 @@ class QwenwithPrefix(nn.Module):
             image_atts = torch.ones((B, N), dtype=torch.long, device=image_embeds.device)
 
         query_embeds =self.qformer(image_embeds,image_atts)
+        prefix_embes=self.projector(query_embeds)
 
         embed_layer=self.qwen.get_input_embeddings()
         token_embeds=embed_layer(input_ids)
 
-        inputs_embeds=torch.cat([query_embeds ,token_embeds],dim=1)
+        inputs_embeds=torch.cat([prefix_embes ,token_embeds],dim=1)
 
         B=input_ids.size(0)
-
-        self.prefix_len=self.qformer.num_query_tokens
 
         prefix_attention=torch.ones((B,self.prefix_len),dtype=attention_mask.dtype,device=DEVICE)
         attention_mask=torch.cat([prefix_attention,attention_mask],dim=1)
@@ -83,10 +82,10 @@ def build_model(global_,model,data,training,stage,device):
     for p in clip_model.parameters():
         p.requires_grad=False
 
-    d_vision=clip_model.vision_model.config.hidden_zie
+    d_vision=clip_model.vision_model.config.hidden_size
     d_qwen=qwen.config.hidden_size
     qformer=QFormer(
-        num_query_tokens=32,
+        num_query_tokens=model.prefix_len,
         vision_hidden_dim=d_vision,
         qformer_hidden_dim=768,
         num_hidden_layers=12,
@@ -99,9 +98,10 @@ def build_model(global_,model,data,training,stage,device):
     if stage.name=="QUERY_TRAIN":
         set_requires_grad(qwen,False)
         set_requires_grad(qformer,True)
+        set_requires_grad(projector,True)
     else:
         set_requires_grad(qformer,False)
-        qformer.load_state_dict(torch.load(stage.qformer_cpkt,map_location=device))
+        qformer.load_state_dict(torch.load(stage.qformer_ckpt,map_location=device))
 
     model=QwenwithPrefix(qwen=qwen,
                          clip_model=clip_model,
