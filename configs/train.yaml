@@ -6,7 +6,7 @@ model:
   base_model: Qwen/Qwen3-1.7B
   clip_model: openai/clip-vit-base-patch32
   prefix_len: 20
-  qwen_dim: 2048
+  # qwen_dim: 2048
   lora:
     r: 64
     lora_alpha: 16

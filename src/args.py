@@ -16,7 +16,7 @@ class ModelArguments:
     base_model:str
     clip_model:str
     prefix_len:int
-    qwen_dim:int
+    # qwen_dim:int
     lora:LoraArguments
 
 @dataclass
@@ -47,7 +47,7 @@ class TrainingArg:
     save_strategy:str
     new_model_dir:str
     qformer_dir:str
-    resume_from_checkpoint:str
+    resume_from_checkpoint:Optional[str]
     eval_delay:int
     dataloader_drop_last:bool
     dataloader_num_workers:int

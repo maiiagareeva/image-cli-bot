@@ -46,6 +46,23 @@ def main():
     datasets=VLMDataset(data_config)
     trainer=gopher_trainer(model,datasets,collator,training_config,qformer,stage_config.name)
 
+
+    # test check
+    print("has projector:", hasattr(model, "projector"))
+
+    print("trainable:", [n for n,p in model.named_parameters() if p.requires_grad][:50])
+
+    with torch.no_grad():
+        pv = torch.randn(2,3,224,224).to(device)
+        vo = model.clip.vision_model(pixel_values=pv).last_hidden_state[:,1:,:]
+        qa = torch.ones(vo.shape[:2], dtype=torch.long, device=device)
+        q = model.qformer(vo, qa)
+        print("qformer out:", q.shape)
+
+    layer0 = model.qformer.transformer.encoder.layer[0]
+    print("layer0 attrs:", [a for a in dir(layer0) if "cross" in a.lower()])
+
+
     #test
     before = qformer.query_tokens.detach().clone()
     #train

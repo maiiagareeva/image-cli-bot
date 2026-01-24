@@ -35,6 +35,7 @@ class QFormer(nn.Module):
             pretrained_bert,
             config=config,
             add_pooling_layer=False,
+            use_cache=False,
         )
 
     def forward(
@@ -49,6 +50,10 @@ class QFormer(nn.Module):
         #drop CLS already happedn in QwenwithPrefix forward
         # image_embeds = image_embeds[:, 1:, :]  # drop CLS 
         query_tokens = self.query_tokens.expand(image_embeds.shape[0], -1, -1)
+
+        if image_atts is None:
+            B, N = image_embeds.shape[:2]
+            image_atts = torch.ones((B, N), dtype=torch.long, device=image_embeds.device)
 
         query_output = self.transformer(
             inputs_embeds=query_tokens,

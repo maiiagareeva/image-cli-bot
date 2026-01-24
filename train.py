@@ -24,7 +24,7 @@ NEW_MODEL="./qwen3-1.7B-ngld-lora-1"
 
 CLIP_NAME="openai/clip-vit-base-patch32"
 PREFIX_LEN=20
-QWEN_DIM=2048
+# QWEN_DIM=2048
 MAX_PROMPT_LEN = 256
 MAX_ANSWER_LEN = 256
 

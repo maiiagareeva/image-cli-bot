@@ -7,11 +7,12 @@ from src.utils import *
 from QFormer.qformer import QFormer
 
 class QwenwithPrefix(nn.Module):
-    def __init__(self,qwen,clip_model,qformer,prefix_len):
+    def __init__(self,qwen,clip_model,qformer,projector,prefix_len):
         super().__init__()
         self.qwen=qwen
         self.clip=clip_model
         self.qformer=qformer
+        self.projector=projector
         self.prefix_len=prefix_len
 
         for p in self.clip.parameters():
@@ -106,6 +107,7 @@ def build_model(global_,model,data,training,stage,device):
     model=QwenwithPrefix(qwen=qwen,
                          clip_model=clip_model,
                          qformer=qformer,
+                         projector=projector,
                          prefix_len=model.prefix_len
                         )
     

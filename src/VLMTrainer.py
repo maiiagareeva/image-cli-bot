@@ -58,7 +58,7 @@ class VLMTrainer(Trainer):
             prefix_attention=torch.ones((B,P),dtype=attention_mask.dtype,device=DEVICE)
             attention_mask=torch.cat([prefix_attention,attention_mask],dim=1)
 
-            genrated_ids=model.qwen.generate(
+            generated_ids=model.qwen.generate(
                 inputs_embeds=inputs_embeds,
                 attention_mask=attention_mask,
                 max_new_tokens=200,
@@ -66,6 +66,19 @@ class VLMTrainer(Trainer):
                 use_cache=True,
             )
 
-            generated_res=genrated_ids[:,P+T:]
+            prompt_lens=attention_mask.sum(dim=1).to_list()
+            generated=[]
+            for i in range(generated_ids.size(0)):
+                generated.append(generated_ids[i,P+prompt_lens[i]:])
+            pad_id=tokenizer.pad_token_ids
+            max_len=max(x.numel() for x in generated)
+            generated_res = torch.full((len(generated), max_len), 
+                                       pad_id, 
+                                       device=generated_ids.device, 
+                                       dtype=generated_ids.dtype)
+            for i,x in enumerate(generated):
+                generated_res[i, :x.numel()] = x
+
+            # generated_res=generated_ids[:,P+T:]
 
         return None,generated_res,labels
