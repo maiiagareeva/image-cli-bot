@@ -11,20 +11,31 @@
             "program": "${file}",
             "console": "integratedTerminal"
         },
+        // {
+        //     "name": "Run pipeline with real API_KEY",
+        //     "type": "debugpy",
+        //     "request": "launch",
+        //     "program": "app.py",
+        //     "args": ["--prompt", 
+        //             "...", 
+        //             "--image",
+        //             "leaf_disease_vlm/downy_early_leaf_bottom/001.jpeg"],
+        //     "env": {
+        //         "USE_MOCK": "0",
+        //                 },
+        //     "envFile": "${workspaceFolder}/secrets/openai.env",
+        //     "console": "integratedTerminal"
+        // },
         {
-            "name": "Run pipeline with real API_KEY",
+            "name": "Debug common_words",
             "type": "debugpy",
             "request": "launch",
-            "program": "app.py",
-            "args": ["--prompt", 
-                    "...", 
-                    "--image",
-                    "leaf_disease_vlm/downy_early_leaf_bottom/001.jpeg"],
-            "env": {
-                "USE_MOCK": "0",
-                        },
-            "envFile": "${workspaceFolder}/secrets/openai.env",
-            "console": "integratedTerminal"
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": [
+                "--root", "leaf_disease_vlm",
+                "--manifest-out", "metadata_manifest.csv"
+            ]
         }
     ]
 }

@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Tuple
 import nltk
+import clip
 
 import pandas as pd
 from PIL import Image
@@ -21,6 +22,28 @@ IMG_EXTS = {".jpg", ".jpeg", ".png"}
 nltk.download("stopwords")
 STOPWORDS = set(nltk.corpus.stopwords.words("english"))
 STOPWORDS |= DOMAIN_STOPWORDS
+tokenizer = clip.tokenize
+
+def shorten_to_tokens_max(text: str, tokenizer, max_tokens: int = 77) -> str:
+    try:
+        tokens = tokenizer(text, truncate=False)
+        if tokens.shape[1] <= max_tokens:
+            return text
+    except RuntimeError:
+        pass
+
+    words = text.split()
+    while words:
+        attempt = " ".join(words)
+        try:
+            tokens = tokenizer(attempt, truncate=False)
+            if tokens.shape[1] <= max_tokens:
+                return attempt
+        except RuntimeError:
+            pass
+        words.pop()
+    return ""
+
 
 def normalize_text(s: str, max_len: int = 77) -> str:
     # normalization
@@ -32,8 +55,15 @@ def normalize_text(s: str, max_len: int = 77) -> str:
     s = re.sub(r"\s+", " ", s).strip()
     all_words = [w for w in s.split() if w not in STOPWORDS] # creating a new filtered text from the old one
     result = " ".join(all_words)
-    # if len(result) > max_len:
-    #     result = result[:max_len].rsplit(" ", 1)[0] # takes everything despite the last word
+    try:
+        tokens = tokenizer(result, truncate=False)
+    except RuntimeError:
+        result = shorten_to_tokens_max(result, tokenizer, max_tokens=max_len)
+        tokens = tokenizer(result, truncate=False)
+
+    while tokens.shape[1] > max_len:
+        result = shorten_to_tokens_max(result, tokenizer, max_tokens=max_len)
+        tokens = tokenizer(result, truncate=False)
     return result
 
 
