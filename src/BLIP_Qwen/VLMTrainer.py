@@ -11,9 +11,10 @@ class VLMTrainer(Trainer):
 
         labels = inputs.get("labels", None)
 
-        pixel_values = inputs["pixel_values"].to(model.qwen.device)
-        prompt_input_ids = inputs["prompt_input_ids"].to(model.qwen.device)
-        prompt_attention_mask = inputs["prompt_attention_mask"].to(model.qwen.device)
+        device=next(model.parameters()).device
+        pixel_values = inputs["pixel_values"].to(device)
+        prompt_input_ids = inputs["prompt_input_ids"].to(device)
+        prompt_attention_mask = inputs["prompt_attention_mask"].to(device)
 
         with torch.no_grad():
             generated_ids = model.generate(
