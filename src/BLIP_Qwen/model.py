@@ -64,7 +64,7 @@ class QwenWithBLIPPrefix(nn.Module):
             eos_token_id=gen_kwargs.get("eos_token_id", None),
         )
 
-def build_model(model_cfg, device):
+def build_model(model_cfg, device,train_cfg):
     quant_cfg = BitsAndBytesConfig(
         load_in_4bit=True,
         bnb_4bit_quant_type="nf4",

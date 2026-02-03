@@ -4,7 +4,13 @@ import json
 
 from datasets import Dataset,DatasetDict,Features,Value,Image as HFImage
 
-ROOT=Path("NGLD")
+SCRIPT_DIR = Path(__file__).resolve().parent
+ROOT = SCRIPT_DIR / "NGLD"
+print("SCRIPT_DIR =", SCRIPT_DIR)
+print("ROOT =", ROOT)
+print("ROOT exists =", ROOT.exists())
+assert ROOT.exists(), f"NGLD folder not found at {ROOT}"
+
 
 rows=[]
 
@@ -14,7 +20,7 @@ disease_alias_map={
     "healthy":"Healthy",
 }
 
-for class_folder in ["Healthy Leaves","Downy Mildew"]:
+for class_folder in ["Healthy_Leaves","Downy_Mildew"]:
     folder=ROOT/class_folder
 
     for image_path in folder.glob("*.jpg"):
@@ -40,21 +46,31 @@ print(images_DF.head(10))
 print(len(images_DF))
 
 samples=[]
-for _,r in images_DF.iterrows():
-    image_id=r["image_id"]
-    image_path=r["image_path"]
+for _, r in images_DF.iterrows():
+    image_id = r["image_id"]
+    image_path = r["image_path"]
 
-    teacher=json.loads(Path(r["teacher_path"]).read_text(encoding="utf-8"))
+    teacher = json.loads(Path(r["teacher_path"]).read_text(encoding="utf-8"))
+
+    raw_disease = teacher.get("disease", "").strip().lower()
+
+    if raw_disease not in disease_alias_map:
+        continue
+
+    teacher["disease"] = disease_alias_map[raw_disease]
+    pred = teacher["disease"]
+
+    expected = r["class_folder"]
+
+    if expected == "Healthy Leaves" and pred != "Healthy":
+        continue
+    if expected == "Downy Mildew" and pred != "Downy Mildew":
+        continue
 
     teacher.pop("differentials", None)
-    teacher.pop("references",None)
-    teacher.pop("confidence",None)
-    teacher.pop("severity",None)
-
-    raw_disease=teacher.get("disease","").strip().lower()
-
-    if raw_disease in disease_alias_map:
-        teacher["disease"]=disease_alias_map[raw_disease]
+    teacher.pop("references", None)
+    teacher.pop("confidence", None)
+    teacher.pop("severity", None)
 
     samples.append({
         "sample_id": f"{image_id}|teacher",
@@ -72,6 +88,7 @@ for _,r in images_DF.iterrows():
             sort_keys=False
         ),
     })
+
 
     
 samples_DF=pd.DataFrame(samples)

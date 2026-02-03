@@ -18,6 +18,12 @@ from transformers import (
 )
 from peft import PeftModel
 
+BASE_MODEL_ID = "Qwen/Qwen3-1.7B"
+CKPT_DIR = "./qwen3-1.7B-ngld-lora-1"
+LORA_PATH = CKPT_DIR
+PROJECTOR_PATH = f"{CKPT_DIR}/projector.pt"
+BLIP2_MODEL_ID = "Salesforce/blip2-opt-2.7b"
+
 class BLIP2Model(nn.Module):
     def __init__(self,blip2_model_id,device,dtype= torch.float16,freeze= True,):
         super().__init__()
@@ -67,8 +73,9 @@ class QwenWithBLIPPrefix(nn.Module):
         device = input_ids.device
         qwen_dtype = self.qwen.get_input_embeddings().weight.dtype
 
-        query_embeds = self.blip(pixel_values)
-        prefix_embeds = self.projector(query_embeds).to(dtype=qwen_dtype)
+        query_embeds = self.blip(pixel_values).to(dtype=qwen_dtype)
+        prefix_embeds = self.projector(query_embeds)
+
         B, P, _ = prefix_embeds.shape
 
         token_embeds = self.qwen.get_input_embeddings()(input_ids).to(dtype=qwen_dtype)
@@ -136,10 +143,6 @@ def infer_once(image_path,prompt,model: QwenWithBLIPPrefix,tokenizer,image_proce
         text = text[len(prompt):].lstrip()
     return text
 
-BASE_MODEL_ID = "Qwen/Qwen3-1.7B"
-LORA_PATH = "qwen3-1.7B-ngld-lora"
-BLIP2_MODEL_ID = "Salesforce/blip2-opt-2.7b"
-PROJECTOR_PATH = "./qwen3-1.7B-ngld-lora-1/projector.pt"
 
 def main():
     ap = argparse.ArgumentParser()
@@ -157,7 +160,7 @@ def main():
     )
 
     image_processor = AutoProcessor.from_pretrained(BLIP2_MODEL_ID)
-    blip2model = HFBLIP2Bridge(
+    blip2model = BLIP2Model(
         blip2_model_id=BLIP2_MODEL_ID,
         device=device,
         dtype=torch.float16,
@@ -166,8 +169,9 @@ def main():
 
     d_qformer = blip2model.blip2.qformer.config.hidden_size
     d_qwen = qwen.config.hidden_size
-    projector = nn.Linear(d_qformer, d_qwen).to(device, dtype=torch.float16)
 
+    qwen_dtype = qwen.get_input_embeddings().weight.dtype
+    projector = nn.Linear(d_qformer, d_qwen).to(device, dtype=qwen_dtype)
     state_dict = torch.load(PROJECTOR_PATH, map_location=device)
     projector.load_state_dict(state_dict, strict=True)
     projector.eval()

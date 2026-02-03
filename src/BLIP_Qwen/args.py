@@ -54,6 +54,7 @@ class TrainingArg:
     metric_for_best_model: str
     greater_is_better: bool
     label_names: List[str]
+    enable_metrics: bool
 
 @dataclass
 class GlobalArguments:

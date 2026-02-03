@@ -1,6 +1,6 @@
 from transformers import Trainer, TrainingArguments
 from src.metrics import *
-from src.VLMTrainer import *
+from src.CLIP_Qwen.VLMTrainer import *
 from transformers import AutoTokenizer
 from src.callbacks import *
 
@@ -37,7 +37,7 @@ def gopher_trainer(model,datasets,collator,trainning_cfg,qformer,stage_name):
     )
 
     tokenizer=collator.tokenizer
-    compute_metrics=build_compute_metrics(tokenizer)
+    compute_metrics = build_compute_metrics(tokenizer,enable_metrics=trainning_cfg.enable_metrics)
     callbacks=[QFormerCallback(qformer,filename=f"qformer_{stage_name}.pt")]
 
     return VLMTrainer(
