@@ -109,24 +109,34 @@ def build_generate_kwargs(cfg, model, tokenizer):
     return kwargs
 
 def apply_stop_strings(text, stop_strings):
+    if text is None:
+        return ""
     if not stop_strings:
-        return text
+        return text.strip()
+
     cut = None
     for s in stop_strings:
+        if not s:
+            continue
         idx = text.find(s)
         if idx != -1:
             cut = idx if cut is None else min(cut, idx)
-#     return text[:cut].strip() if cut is not None else text
+
+    if cut is None:
+        return text.strip()
+    return text[:cut].strip()
 # def apply_stop_strings(text,stop_strings):
 #     return text
 
-# def trim_to_last_brace(text):
-#     j = text.rfind("}")
-#     if j != -1:
-#         return text[: j + 1].strip()
-#     return text
 def trim_to_last_brace(text):
-    return text
+    if text is None:
+        return ""
+    j = text.rfind("}")
+    if j == -1:
+        return text.strip()
+    return text[: j + 1].strip()
+# def trim_to_last_brace(text):
+    # return text
 
 def main():
     cfg = load_yaml("configs/blip2.yaml")
@@ -134,7 +144,7 @@ def main():
     model_id = cfg["model"]["model_id"]
     image_path = cfg["model"]["image_path"]
 
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    # device = "cuda" if torch.cuda.is_available() else "cpu"
 
     processor = Blip2Processor.from_pretrained(model_id)
 
@@ -176,27 +186,24 @@ def main():
         text = tokenizer.decode(generated_ids[0][input_len:],skip_special_tokens=True).strip()
 
     post = cfg.get("postprocess", {})
-    text = apply_stop_strings(text, post.get("stop_strings", []) or [])
-    if bool(post.get("trim_to_last_brace", False)):
-        text = trim_to_last_brace(text)
+    raw_text = text
 
-    dbg = cfg.get("debug", {})
-    if dbg.get("print_input_len", False):
-        if input_len is not None:
-            print("input_len =", input_len)
-        print("total_len =", int(generated_ids.shape[1]))
+    text_after_stop = apply_stop_strings(raw_text, post.get("stop_strings", []) or [])
+    text_after_trim = trim_to_last_brace(text_after_stop) if bool(post.get("trim_to_last_brace", False)) else text_after_stop
 
-    n_first = int(dbg.get("print_first_tokens", 0) or 0)
-    if n_first > 0:
-        if is_encoder_decoder:
-            first = generated_ids[0][:n_first].tolist()
-        else:
-            start = input_len if input_len is not None else 0
-            first = generated_ids[0][start : start + n_first].tolist()
-        print("first tokens:", tokenizer.convert_ids_to_tokens(first))
+    print("=== raw_text ===")
+    print(raw_text)
 
-    print(text)
+    print("\n=== text_after_stop ===")
+    print(text_after_stop)
 
+    print("\n=== text_after_trim ===")
+    print(text_after_trim)
+
+    print("\n")
+    print("raw:", type(raw_text), len(raw_text) if raw_text is not None else 0)
+    print("stop:", type(text_after_stop), len(text_after_stop) if text_after_stop is not None else 0)
+    print("trim:", type(text_after_trim), len(text_after_trim) if text_after_trim is not None else 0)
 
 if __name__ == "__main__":
     main()

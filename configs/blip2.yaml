@@ -19,13 +19,8 @@ load:
 
 prompt:
   schema_text: |
-    Output a diagnosis in the following JSON schema:
-    {
-      "disease":one of ["Healthy", "Downy Mildew", "Unknown"],
-      "indicators": array of short strings,
-      "recommended_checks": array of short strings,
-      "evidence": array of short strings
-    }
+    Output ONLY one JSON object exactly in this format (fill values, keep keys):
+    {"disease":"Unknown","indicators":[],"recommended_checks":[],"evidence":""}
   fewshot_text: |
     Example 1 (Healthy):
     {
@@ -110,9 +105,7 @@ constraints:
   use_prefix_allowed_tokens_fn: false
 
 postprocess:
-  stop_strings:
-    - "\n\n"
-    # - "}"
+  stop_strings: []
   trim_to_last_brace: true
 
 debug:
