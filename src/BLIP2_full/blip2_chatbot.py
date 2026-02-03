@@ -15,11 +15,11 @@ import yaml
 config=yaml.safe_load(open("configs/blip2.yaml","r",encoding="utf-8"))
 model_id=config.get("model_id", "Salesforce/blip2-opt-2.7b")
 image_path=config["image_path"]
-use_fewshot=config.get("use_fewshot")
+use_fewshot = bool(config.get("use_fewshot", False))
 gen=config.get("generation",{})
-max_new_tokens=gen.get("max_new_tokens")
-do_sample=gen.get("do_sample")
-num_beams=gen.get("num_beams")
+max_new_tokens = int(gen.get("max_new_tokens", 500))
+do_sample = bool(gen.get("do_sample", False))
+num_beams = int(gen.get("num_beams", 3))
 
 def get_image(path):
     image=Image.open(path).convert("RGB")
@@ -70,7 +70,7 @@ Example 2 (Downy Mildew):
   "evidence": "The observed discoloration pattern is consistent with early downy mildew presentation (chlorotic/oil-like patches that may align with venation). While underside sporulation is not always captured in a single photo, the visible symptom pattern supports downy mildew over a healthy leaf."
 }
 """.strip()
-def build_pompt(use_fewshot=False):
+def build_pompt(use_fewshot):
     prompt=(
         "You are a grape leaf disease diagnosis assistant. "
         "Analyze the image and output a diagnosis in the following JSON schema.\n\n"
@@ -94,10 +94,13 @@ model = Blip2ForConditionalGeneration.from_pretrained(
 )
 # model.to(device)
 model.eval()
+tokenizer=processor.tokenizer
+model.generation_config.eos_token_id=tokenizer.eos_token_id
+model.generation_config.pad_token_id=tokenizer.pad_token_id if tokenizer.pad_token_id is not None else model.generation_config.eos_token_id
 
 image=get_image(image_path)
 
-prompt = build_pompt(False)
+prompt = build_pompt(use_fewshot)
 inputs = processor(images=image, 
                    text=prompt, 
                    return_tensors="pt"
@@ -107,8 +110,11 @@ if torch.cuda.is_available():
 
 generated_ids = model.generate(**inputs,
                                max_new_tokens=max_new_tokens,
+                               min_new_tokens=100,
                                do_sample=do_sample,
-                               num_beams=(num_beams if not do_sample else 1)
+                               num_beams=(num_beams if not do_sample else 1),
+                               eos_token_id=model.generation_config.eos_token_id,
+                               pad_token_id=model.generation_config.pad_token_id,
                                )
 # generated_texts = processor.tokenizer.batch_decode(
 #     generated_ids,
@@ -116,9 +122,25 @@ generated_ids = model.generate(**inputs,
 # )
 # print(generated_texts[0].strip())
 input_len = inputs["input_ids"].shape[1]
+total_len = generated_ids.shape[1]
+new_len = total_len - input_len
+
+print("input_len =", input_len)
+print("total_len =", total_len)
+print("new_len   =", new_len)
+
+raw=processor.tokenizer.decode(
+    generated_ids[0][input_len:], 
+      skip_special_tokens=False
+    ).strip()
+print("repr(raw)=", repr(raw))
 
 text = processor.tokenizer.decode(
       generated_ids[0][input_len:], 
-      skip_special_tokens=True
+      skip_special_tokens=False
     ).strip()
-print(text)
+
+print("repr(text)=",repr(text))
+
+print("first 30 tokens:", processor.tokenizer.convert_ids_to_tokens(generated_ids[0][input_len:input_len+30].tolist()))
+print("eos_token_id:", processor.tokenizer.eos_token_id, "pad_token_id:", processor.tokenizer.pad_token_id)
