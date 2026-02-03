@@ -1,9 +1,120 @@
-model_id: "Salesforce/blip2-opt-2.7b"
-image_path: "examples/ex1.jpg"
-use_fewshot: false
+model:
+  model_id: "Salesforce/blip2-opt-2.7b"
+  # mode_id: "Salesforce/blip2-flan-t5-xxl"
+  # model_id: "Salesforce/blip2-opt-6.7b-coco"
+  # model_id: "Salesforce/blip2-opt-6.7b"
+  # model_id: "Salesforce/blip2-flan-t5-xl"
+  image_path: "examples/ex1.jpg"
+  use_fewshot: false
+
+load:
+  device_map: "auto"
+  quantization:
+    enable: true
+    # bits: 8
+    bit: 4
+    # avaliable when bit:4
+    bnb_4bit_quant_type: "nf4"
+    bnb_4bit_compute_dtype: "float16"
+
+prompt:
+  schema_text: |
+    Output a diagnosis in the following JSON schema:
+    {
+      "disease":one of ["Healthy", "Downy Mildew", "Unknown"],
+      "indicators": array of short strings,
+      "recommended_checks": array of short strings,
+      "evidence": array of short strings
+    }
+  fewshot_text: |
+    Example 1 (Healthy):
+    {
+      "disease": "Healthy",
+      "indicators": [
+        "vibrant green coloration",
+        "smooth, slightly glossy surface",
+        "no visible lesions or spots",
+        "prominent, healthy venation",
+        "absence of chlorosis or necrosis"
+      ],
+      "recommended_checks": [
+        "Continue routine monitoring for onset of symptoms.",
+        "Inspect undersides for hidden signs of pests or subtle mycelial growth.",
+        "Assess neighboring leaves for early or minor symptoms not present on this sample."
+      ],
+      "evidence": "This grape leaf displays all hallmarks of a healthy specimen: its color is vibrant green, the surface is smooth and slightly glossy, and the venation pattern is prominent without interruption or abnormality. The absence of lesions, spots, galls, puckering, or any signs of chlorosis or necrosis strongly rules out the common early leaf diseases such as downy mildew (both on the top and bottom surfaces) and phylloxera. Disease indicators such as oily lesions, angular yellow patches, or blister-like deformations are entirely absent. The photographic clarity and balanced lighting further enhance the reliability of this assessment, allowing confident exclusion of subtle pathologies. Routine monitoring remains advisable as early-stage symptoms can appear suddenly, but at present, there is no evidence of disease or stress, supporting the classification of 'healthy' with very high confidence."
+    }
+
+    Example 2 (Downy Mildew):
+    {
+      "disease": "Downy Mildew",
+      "indicators": [
+        "brown patches and spots along edges",
+        "chlorosis (yellowing) around lesions",
+        "slightly wrinkled and leathery texture",
+        "curling and deformation of leaf edges"
+      ],
+      "recommended_checks": [
+        "Examine the lower surface for white downy sporulation",
+        "Monitor other leaves and vines for similar symptoms",
+        "Assess recent humidity and rainfall patterns, as high moisture favors downy mildew"
+      ],
+      "evidence": "The described leaf shows brown patches and spots, particularly along the margins, with areas of yellowing (chlorosis) around these lesions. Leaf deformation and curling are present, as is a slightly wrinkled and leathery texture. These signs are characteristic of early downy mildew affecting the upper leaf surface (downy_early_leaf_top). Downy mildew frequently initiates as yellow or chlorotic spots ('oil spots') on the upper surface, turning necrotic brown with time, often accompanied by wrinkling and curling as the leaf tissue is compromised. The recommendation to check the lower surface is because white fungal growth there would confirm the diagnosis, but its absence in this description suggests early or exclusively upper surface expression. The overall distribution and presence of chlorosis help to distinguish this from phylloxera and other non-pathogenic causes."
+    }
+  template: |
+    You are a grape leaf disease diagnosis assistant.
+    Analyze the image and output a diagnosis in the following JSON schema.
+    Rules:
+    Output MUST be valid JSON.
+    Do NOT output any extra text.
+    Do NOT copy the schema text.
+
+    {SCHEMA}
+
+    {FEWSHOT}
+
+    Now analyze the image and output ONLY the JSON object.
 
 generation:
   do_sample: false
   num_beams: 3
-  max_new_tokens: 1000
- 
+  early_stopping: true
+  length_penalty: 1.0
+
+  # turn on when do_sample=true
+  temperature: 0.7
+  top_p: 0.9
+  top_k: 0
+  typical_p: null
+  min_p: null
+  num_return_sequences: 1
+
+  repetition_penalty: 1.15
+  no_repeat_ngram_size: 4
+  encoder_no_repeat_ngram_size: null
+  renormalize_logits: true
+
+  diversity_penalty: 0.0
+  num_beam_groups: 1
+
+  max_new_tokens: 256
+  min_new_tokens: 20
+
+  eos_token_id: null
+  pad_token_id: null
+
+constraints:
+  bad_words:
+    - "<unk>"
+    - "Output a diagnosis in the following JSON schema:"
+  use_prefix_allowed_tokens_fn: false
+
+postprocess:
+  stop_strings:
+    - "\n\n"
+    # - "}"
+  trim_to_last_brace: true
+
+debug:
+  print_input_len: true
+  print_first_tokens: 30
