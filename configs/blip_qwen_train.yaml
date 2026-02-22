@@ -24,15 +24,15 @@ training:
   per_device_train_batch_size: 2
   per_device_eval_batch_size: 2
   gradient_accumulation_steps: 2
-  learning_rate: 2e-4
-  logging_steps: 25
+  learning_rate: 0.0002
+  logging_steps: 10
   save_steps: 200
-  evaluation_strategy: steps
+  evaluation_strategy: "no"
   eval_steps: 200
-  fp16: true
-  bf16: false
+  fp16: false
+  bf16: true
   report_to: none
-  gradient_checkpointing: true
+  gradient_checkpointing: false
   remove_unused_columns: false
   dataloader_pin_memory: true
   save_safetensors: false
@@ -47,3 +47,4 @@ training:
   metric_for_best_model: rougeL
   greater_is_better: true
   label_names: ["labels"]
+  enable_metrics: false

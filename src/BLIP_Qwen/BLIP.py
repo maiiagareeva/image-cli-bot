@@ -47,7 +47,7 @@ class BLIP2Model(nn.Module):
         query_tokens = self.query_tokens.expand(B, -1, -1)
 
         query_embeds = self.qformer(
-            inputs_embeds=query_tokens,
+            query_embeds=query_tokens,
             encoder_hidden_states=image_embeds,
             encoder_attention_mask=image_atts,
             return_dict=True,
