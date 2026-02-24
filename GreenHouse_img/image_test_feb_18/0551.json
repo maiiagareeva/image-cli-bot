@@ -1,0 +1,31 @@
+{
+  "disease_class": "Downy Mildew",
+  "leaf_morphology": {
+    "shape": "lobed",
+    "texture": "slightly rough",
+    "color_tones": [
+      "green",
+      "yellow",
+      "brown"
+    ]
+  },
+  "indicators": [
+    "Irregular brown spots distributed across the leaf surface",
+    "Chlorotic areas primarily interveinal",
+    "Necrotic spots near the leaf edges",
+    "Yellowing concentrated around the veins",
+    "Leaf surface appears slightly distorted",
+    "Brown discoloration following the venation pattern",
+    "Small holes in necrotic areas",
+    "Vein-bounded chlorosis with some crossing over veins"
+  ],
+  "recommended_checks": [
+    "Inspect the abaxial side for any additional discoloration or fungal structures.",
+    "Check for moisture presence on the leaf surface, especially in the morning.",
+    "Examine nearby leaves for similar symptoms to assess spread.",
+    "Look for any powdery or fuzzy growth on the underside of the leaf.",
+    "Evaluate the overall plant for any signs of wilting or stress."
+  ],
+  "evidence": "The leaf exhibits several distinct symptoms indicative of stress or infection. There are irregular brown spots scattered across the surface, with a notable concentration near the edges. These spots are often surrounded by chlorotic, or yellowing, areas which are primarily interveinal but occasionally cross over veins. The leaf texture appears slightly rough, and there is a distortion in the overall leaf shape. Some necrotic spots have developed into small holes, indicating tissue death. The yellowing is more pronounced around the veins, suggesting a pattern of vein-bounded chlorosis. The distribution of these symptoms is uneven, with some areas more affected than others. The presence of these indicators suggests a need for further inspection, particularly on the abaxial side, to identify any additional signs of fungal growth or moisture accumulation that may not be visible from the adaxial perspective. This comprehensive assessment is crucial for determining the extent and nature of the issue affecting the grape leaf.",
+  "disease": "Downy Mildew"
+}
