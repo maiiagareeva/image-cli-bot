@@ -18,12 +18,6 @@ from transformers import (
 )
 from peft import PeftModel
 
-BASE_MODEL_ID = "Qwen/Qwen3-1.7B"
-CKPT_DIR = "./qwen3-1.7B-ngld-lora-1"
-LORA_PATH = CKPT_DIR
-PROJECTOR_PATH = f"{CKPT_DIR}/projector.pt"
-BLIP2_MODEL_ID = "Salesforce/blip2-opt-2.7b"
-
 class BLIP2Model(nn.Module):
     def __init__(self,blip2_model_id,device,dtype= torch.float16,freeze= True,):
         super().__init__()
@@ -69,15 +63,13 @@ class QwenWithBLIPPrefix(nn.Module):
         self.projector = projector
 
     @torch.no_grad()
-    def generate(self,pixel_values,input_ids,attention_mask,tokenizer,max_new_tokens,do_sample=False,temperature= 0.1,repetition_penalty=1.15,no_repeat_ngram_size=3):
+    def generate(self,pixel_values,input_ids,attention_mask,tokenizer,max_new_tokens,do_sample= True,temperature= 0.1,):
         device = input_ids.device
         qwen_dtype = self.qwen.get_input_embeddings().weight.dtype
 
-        query_embeds = self.blip(pixel_values).to(dtype=qwen_dtype)
-        prefix_embeds = self.projector(query_embeds)
-
+        query_embeds = self.blip(pixel_values)
+        prefix_embeds = self.projector(query_embeds).to(dtype=qwen_dtype)
         B, P, _ = prefix_embeds.shape
-        T=attention_mask.shape[1]
 
         token_embeds = self.qwen.get_input_embeddings()(input_ids).to(dtype=qwen_dtype)
 
@@ -86,19 +78,16 @@ class QwenWithBLIPPrefix(nn.Module):
         prefix_mask = torch.ones((B, P), dtype=attention_mask.dtype, device=device)
         full_attention_mask = torch.cat([prefix_mask, attention_mask], dim=1)
 
-        output=self.qwen.generate(
+        return self.qwen.generate(
             inputs_embeds=inputs_embeds,
             attention_mask=full_attention_mask,
             max_new_tokens=max_new_tokens,
             do_sample=do_sample,
-            temperature=temperature if do_sample else None,
+            temperature=temperature,
             pad_token_id=tokenizer.pad_token_id,
             eos_token_id=tokenizer.eos_token_id,
             use_cache=True,
-            repetition_penalty=repetition_penalty,
-            no_repeat_ngram_size=no_repeat_ngram_size,
         )
-        return output,P,T
 
 def load_qwen_with_lora(base_model_id,lora_path,device_map= "auto",dtype= torch.float16,merge_lora= True):
     qwen = AutoModelForCausalLM.from_pretrained(
@@ -121,15 +110,6 @@ def load_qwen_with_lora(base_model_id,lora_path,device_map= "auto",dtype= torch.
     tokenizer.padding_side = "right"
     return qwen, tokenizer
 
-def _extract_json(text: str):
-    l = text.find("{")
-    r = text.rfind("}")
-    if l == -1 or r == -1 or r <= l:
-        return None
-    try:
-        return json.loads(text[l:r+1])
-    except Exception:
-        return None
 
 @torch.no_grad()
 def infer_once(image_path,prompt,model: QwenWithBLIPPrefix,tokenizer,image_processor,device,max_new_tokens= 256,):
@@ -141,31 +121,25 @@ def infer_once(image_path,prompt,model: QwenWithBLIPPrefix,tokenizer,image_proce
     input_ids = encoded_prompt["input_ids"].to(device)
     attention_mask = encoded_prompt["attention_mask"].to(device)
 
-    output,P,T = model.generate(
+    out_ids = model.generate(
         pixel_values=pixel_values,
         input_ids=input_ids,
         attention_mask=attention_mask,
         tokenizer=tokenizer,
         max_new_tokens=max_new_tokens,
-        do_sample=False,
-        # temperature=0.1,
-        repetition_penalty=1.15,
-        no_repeat_ngram_size=3,
+        do_sample=True,
+        temperature=0.1,
     )
 
-    text = tokenizer.decode(output[0,P+T:], skip_special_tokens=True).strip()
+    text = tokenizer.decode(out_ids[0], skip_special_tokens=True)
+    if text.startswith(prompt):
+        text = text[len(prompt):].lstrip()
+    return text
 
-    out=_extract_json(text)
-    if out is not None and "disease" in out:
-        return out["disease"],text
-
-    return text,text
-
-
-PROMPT = (
-    "You are a grape leaf disease diagnosis assistant. "
-    "Analyze the image and output a diagnosis in the following JSON schema."
-)
+BASE_MODEL_ID = "Qwen/Qwen3-1.7B"
+LORA_PATH = "qwen3-1.7B-ngld-lora"
+BLIP2_MODEL_ID = "Salesforce/blip2-opt-2.7b"
+PROJECTOR_PATH = "./qwen3-1.7B-ngld-lora-1/projector.pt"
 
 def main():
     ap = argparse.ArgumentParser()
@@ -183,7 +157,7 @@ def main():
     )
 
     image_processor = AutoProcessor.from_pretrained(BLIP2_MODEL_ID)
-    blip2model = BLIP2Model(
+    blip2model = HFBLIP2Bridge(
         blip2_model_id=BLIP2_MODEL_ID,
         device=device,
         dtype=torch.float16,
@@ -192,9 +166,8 @@ def main():
 
     d_qformer = blip2model.blip2.qformer.config.hidden_size
     d_qwen = qwen.config.hidden_size
+    projector = nn.Linear(d_qformer, d_qwen).to(device, dtype=torch.float16)
 
-    qwen_dtype = qwen.get_input_embeddings().weight.dtype
-    projector = nn.Linear(d_qformer, d_qwen).to(device, dtype=qwen_dtype)
     state_dict = torch.load(PROJECTOR_PATH, map_location=device)
     projector.load_state_dict(state_dict, strict=True)
     projector.eval()
@@ -212,14 +185,15 @@ def main():
     print("Type 'exit' to quit.\n")
 
     while True:
-        user_in = input("press Enter to run diagnosis: ").strip()
+        user_in = input("User: ").strip()
+        if not user_in:
+            continue
         if user_in.lower() == "exit":
             break
-        prompt=PROMPT
 
-        answer,raw = infer_once(
+        answer = infer_once(
             image_path=args.image,
-            prompt=prompt,
+            prompt=user_in,
             model=vlm,
             tokenizer=tokenizer,
             image_processor=image_processor,
@@ -227,7 +201,6 @@ def main():
             max_new_tokens=256,
         )
         print("\nVLM assistant:\n", answer, "\n")
-        print("\nVLM assistant raw generation:\n", raw, "\n")
 
 if __name__ == "__main__":
     main()

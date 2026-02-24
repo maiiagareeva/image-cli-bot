@@ -64,18 +64,11 @@ class QwenWithBLIPPrefix(nn.Module):
             eos_token_id=gen_kwargs.get("eos_token_id", None),
         )
 
-def build_model(model_cfg, device,train_cfg):
-    if train_cfg.bf16:
-        train_dtype = torch.bfloat16
-    elif train_cfg.fp16:
-        train_dtype = torch.float16
-    else:
-        train_dtype = torch.float32
-
+def build_model(model_cfg, device):
     quant_cfg = BitsAndBytesConfig(
         load_in_4bit=True,
         bnb_4bit_quant_type="nf4",
-        bnb_4bit_compute_dtype=train_dtype,
+        bnb_4bit_compute_dtype=torch.float16,
     )
     qwen = AutoModelForCausalLM.from_pretrained(
         model_cfg.base_model,
@@ -85,8 +78,6 @@ def build_model(model_cfg, device,train_cfg):
     )
     qwen.config.use_cache = False
     qwen = prepare_model_for_kbit_training(qwen)
-
-    set_requires_grad(qwen, False)
 
     lora = model_cfg.lora
     peft_cfg = LoraConfig(
@@ -101,16 +92,17 @@ def build_model(model_cfg, device,train_cfg):
 
     blip = BLIP2Model(model_cfg.blip2_model, 
                       device=device, 
-                      dtype=train_dtype,
+                      dtype=torch.float16
                       )
-    set_requires_grad(blip, False)
 
     d_qformer = blip.qformer_dim
     d_qwen = qwen.config.hidden_size
 
-    projector = nn.Linear(d_qformer, d_qwen)
-    projector=projector.to(device, dtype=train_dtype)
+    qwen_dtype = qwen.get_input_embeddings().weight.dtype
+    projector = nn.Linear(d_qformer, d_qwen).to(device, dtype=qwen_dtype)
 
+    # todo: two stage training
+    set_requires_grad(qwen, True)
     set_requires_grad(projector, True)
 
     return QwenWithBLIPPrefix(qwen=qwen, blip=blip, projector=projector)

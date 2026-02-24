@@ -2,9 +2,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from transformers import HfArgumentParser
 from typing import Optional, List
-from dataclasses import is_dataclass
-import yaml
-from dacite import from_dict, Config as DaciteConfig
 
 @dataclass
 class LoraArguments:
@@ -57,7 +54,6 @@ class TrainingArg:
     metric_for_best_model: str
     greater_is_better: bool
     label_names: List[str]
-    enable_metrics: bool
 
 @dataclass
 class GlobalArguments:
@@ -71,12 +67,7 @@ def parse_yaml(path: str):
         model: ModelArguments
         data: DataArguments
         training: TrainingArg
-    with open(path, "r", encoding="utf-8") as f:
-        raw = yaml.safe_load(f)
 
-    cfg = from_dict(
-        data_class=ConfigArgs,
-        data=raw,
-        config=DaciteConfig(strict=True),
-    )
+    parser = HfArgumentParser(ConfigArgs)
+    (cfg,) = parser.parse_yaml_file(path)
     return cfg

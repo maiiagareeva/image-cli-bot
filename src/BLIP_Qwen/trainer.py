@@ -1,6 +1,5 @@
 from __future__ import annotations
 from transformers import TrainingArguments
-import inspect
 from src.BLIP_Qwen.VLMTrainer import VLMTrainer
 from src.metrics import build_compute_metrics
 
@@ -8,7 +7,7 @@ def make_trainer(model, datasets, collator, train_cfg):
     train_ds = datasets.train_ds
     eval_ds = datasets.eval_ds
 
-    kwargs = dict(
+    args = TrainingArguments(
         output_dir=train_cfg.out_dir,
         num_train_epochs=train_cfg.num_train_epochs,
         per_device_train_batch_size=train_cfg.per_device_train_batch_size,
@@ -17,6 +16,8 @@ def make_trainer(model, datasets, collator, train_cfg):
         learning_rate=train_cfg.learning_rate,
         logging_steps=train_cfg.logging_steps,
         save_steps=train_cfg.save_steps,
+        evaluation_strategy=train_cfg.evaluation_strategy if eval_ds is not None else "no",
+        eval_steps=train_cfg.eval_steps if eval_ds is not None else None,
         fp16=train_cfg.fp16,
         bf16=train_cfg.bf16,
         report_to=train_cfg.report_to,
@@ -35,27 +36,8 @@ def make_trainer(model, datasets, collator, train_cfg):
         label_names=train_cfg.label_names,
     )
 
-    sig = inspect.signature(TrainingArguments.__init__).parameters
-    if eval_ds is None:
-        if "eval_strategy" in sig:
-            kwargs["eval_strategy"] = "no"
-        else:
-            kwargs["evaluation_strategy"] = "no"
-    else:
-        if "eval_strategy" in sig:
-            kwargs["eval_strategy"] = train_cfg.evaluation_strategy
-            kwargs["eval_steps"] = train_cfg.eval_steps
-        else:
-            kwargs["evaluation_strategy"] = train_cfg.evaluation_strategy
-            kwargs["eval_steps"] = train_cfg.eval_steps
-
-    args = TrainingArguments(**kwargs)
-
     tokenizer = collator.tokenizer
-    compute_metrics = build_compute_metrics(
-        tokenizer,
-        enable_metrics=train_cfg.enable_metrics,
-    )
+    compute_metrics = build_compute_metrics(tokenizer)
 
     return VLMTrainer(
         model=model,

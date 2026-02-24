@@ -4,7 +4,7 @@ import evaluate
 rouge=evaluate.load("rouge")
 bleu=evaluate.load("sacrebleu")
 
-def build_compute_metrics(tokenizer,enable_metrics=True):
+def build_compute_metrics(tokenizer):
     def compute_metrics(eval_predict:EvalPrediction):
     
         predictions=eval_predict.predictions
