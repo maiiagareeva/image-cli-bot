@@ -5,13 +5,17 @@ import base64
 from pathlib import Path
 from tqdm import tqdm
 from openai import OpenAI
+import shutil
 
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 DATA_ROOT = Path("GreenHouse_img")
 # IMAGE_DIRS = [DATA_ROOT / "images1", DATA_ROOT / "images2"]
 # IMAGE_DIRS = [DATA_ROOT / "image_test_feb_18"]
-IMAGE_DIRS = [DATA_ROOT / "next118"]
+MISSED_DIR = DATA_ROOT / "missed"
+MISSED_DIR.mkdir(parents=True, exist_ok=True)
+
+IMAGE_DIRS = [DATA_ROOT]
 LABEL_DIR = DATA_ROOT / "labels"
 
 OUTPUT_CSV = "2026_Feb_grape_leaf_structured_reports_test.csv"
@@ -214,9 +218,14 @@ def iter_all_images():
         split_name = d.name
         for p in sorted(d.iterdir()):
             if p.is_file() and p.suffix.lower() in IMG_EXTS:
+                if int(p.stem) <= 2999:
+                    continue
                 yield p, split_name, p.name, p.stem
 
 def main():
+    with open('missing_png_json_report.csv', 'r') as file:
+        lis = file.readlines()[1:]
+        missing_labels = [line.split(',')[0] for line in lis]
     rows = []
     images = list(iter_all_images())
     print(f"Found {len(images)} images across: {[str(d) for d in IMAGE_DIRS]}")
@@ -224,6 +233,12 @@ def main():
     missing_label = 0
     for img_path, split_name, filename, stem in tqdm(images):
         print("img_path, split_name, filename, stem\n", img_path, split_name, filename, stem)
+        target_file_path = MISSED_DIR / filename
+        # if target_file_path.exists():
+        #     print(f"Skipping {filename}, already processed earlier.")
+        #     continue
+        if stem not in missing_labels:
+            continue
         disease = read_label_for_stem(stem)
         if disease is None:
             missing_label += 1
@@ -231,9 +246,9 @@ def main():
 
         img_b64 = encode_image(img_path)
         report = generate_structured_report(img_b64, disease)
-
         json_path = save_json_report_next_to_image(img_path, report)
-
+        shutil.copy2(img_path, MISSED_DIR / filename)
+        shutil.copy2(json_path, MISSED_DIR / json_path.name)
         rows.append([
             split_name,
             str(img_path.relative_to(DATA_ROOT)),
