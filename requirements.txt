@@ -6,8 +6,9 @@ pytest
 transformers
 PyYAML
 safetensors
-torch==2.5.1+cu121
-torchvision==0.20.1+cu121
-torchaudio==2.5.1+cu121
+torch==2.6.0
+torchvision==0.21.0
+torchaudio==2.6.0
+>>>>>>> 7f4932d (BartScore evaluation)
 nltk
 pandas
