@@ -17,6 +17,8 @@ class ModelArguments:
     base_model: str
     blip2_model: str
     lora: LoraArguments
+    init_from_stage1: Optional[str] = None
+    load_stage1_lora: bool = False
 
 @dataclass
 class DataArguments:
@@ -79,6 +81,8 @@ def parse_yaml(path: str) -> ConfigArgs:
             base_model=raw["model"]["base_model"],
             blip2_model=raw["model"]["blip2_model"],
             lora=LoraArguments(**raw["model"]["lora"]),
+            init_from_stage1=raw["model"].get("init_from_stage1", None),
+            load_stage1_lora=raw["model"].get("load_stage1_lora", False),
         ),
         data=DataArguments(**raw["data"]),
         training=TrainingArg(**raw["training"]),

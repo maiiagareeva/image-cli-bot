@@ -1,8 +1,9 @@
+from __future__ import annotations
 from transformers import TrainingArguments
 import inspect
 from src.BLIP_Qwen.VLMTrainer import VLMTrainer
 from src.metrics import build_compute_metrics
-from __future__ import annotations
+
 
 def make_trainer(model, datasets, collator, train_cfg):
     train_ds = datasets.train_ds
