@@ -1,7 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from transformers import HfArgumentParser
 from typing import Optional, List
+import yaml
 
 @dataclass
 class LoraArguments:
@@ -54,21 +54,32 @@ class TrainingArg:
     metric_for_best_model: str
     greater_is_better: bool
     label_names: List[str]
-    enable_metrics: bool
+    enable_metrics: bool = False
+    use_weighted_loss: bool = False
 
 @dataclass
 class GlobalArguments:
     seed: int
     deterministic: bool
 
-def parse_yaml(path: str):
-    @dataclass
-    class ConfigArgs:
-        global_: GlobalArguments
-        model: ModelArguments
-        data: DataArguments
-        training: TrainingArg
+@dataclass
+class ConfigArgs:
+    global_: GlobalArguments
+    model: ModelArguments
+    data: DataArguments
+    training: TrainingArg
 
-    parser = HfArgumentParser(ConfigArgs)
-    (cfg,) = parser.parse_yaml_file(path)
-    return cfg
+def parse_yaml(path: str) -> ConfigArgs:
+    with open(path, "r", encoding="utf-8") as f:
+        raw = yaml.safe_load(f)
+
+    return ConfigArgs(
+        global_=GlobalArguments(**raw["global_"]),
+        model=ModelArguments(
+            base_model=raw["model"]["base_model"],
+            blip2_model=raw["model"]["blip2_model"],
+            lora=LoraArguments(**raw["model"]["lora"]),
+        ),
+        data=DataArguments(**raw["data"]),
+        training=TrainingArg(**raw["training"]),
+    )
