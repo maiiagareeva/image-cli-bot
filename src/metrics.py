@@ -55,7 +55,15 @@ def build_compute_metrics(tokenizer,enable_metrics=True):
         )
 
         # .score() takes (source_list, target_list)
-        bart_scores = scorer.score(pred_text, ref_text, batch_size=4)
+        # bart_scores = scorer.score(pred_text, ref_text, batch_size=4)
+        # avg_bart_score = sum(bart_scores) / len(bart_scores)
+
+        # INSTEAD: Use bidirectional BARTScore to reduce bias for short predictions
+        # forward: P(ref | pred)
+        scores_forward = scorer.score(pred_text, ref_text, batch_size=4)
+        # backward: P(pred | ref)
+        scores_backward = scorer.score(ref_text, pred_text, batch_size=4)
+        bart_scores = [ (f + b) / 2 for f, b in zip(scores_forward, scores_backward)]
         avg_bart_score = sum(bart_scores) / len(bart_scores)
 
         return{
@@ -66,4 +74,3 @@ def build_compute_metrics(tokenizer,enable_metrics=True):
             "bartscore": float(avg_bart_score),
         }
     return compute_metrics
->>>>>>> 7f4932d (BartScore evaluation)
