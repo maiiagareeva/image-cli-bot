@@ -1,0 +1,8 @@
+{
+  "base_model": "Qwen/Qwen3-1.7B",
+  "blip2_model": "Salesforce/blip2-opt-2.7b",
+  "qformer_dim": 768,
+  "prefix_len": 32,
+  "use_query_mixer": true,
+  "use_weighted_loss": false
+}

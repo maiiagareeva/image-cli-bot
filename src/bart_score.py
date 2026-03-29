@@ -7,7 +7,7 @@ import numpy as np
 
 
 class BARTScorer:
-    def __init__(self, device='cuda:0', max_length=1024, checkpoint='facebook/bart-large-cnn'):
+    def __init__(self, device='cuda:0', max_length=1024, checkpoint='vblagoje/bart_lfqa'):
         # Set up model
         self.device = device
         self.max_length = max_length
