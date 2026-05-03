@@ -17,6 +17,12 @@ class ModelArguments:
     base_model: str
     blip2_model: str
     lora: LoraArguments
+    qformer_stage1_dir: Optional[str] = None
+    use_query_mixer: bool = False
+    num_query_token: int = 32
+    cross_attention_freq: int = 2
+    lavis_model_type: Optional[str] = None
+    train_query_tokens: bool = False
 
 @dataclass
 class DataArguments:
@@ -56,6 +62,11 @@ class TrainingArg:
     label_names: List[str]
     enable_metrics: bool = False
     use_weighted_loss: bool = False
+    lr_qformer: float = 1e-5
+    lr_query_tokens: float = 1e-5
+    lr_projector: float = 1e-4
+    lr_lora: float = 5e-5
+    lr_other: float = 5e-5
 
 @dataclass
 class GlobalArguments:
@@ -69,17 +80,40 @@ class ConfigArgs:
     data: DataArguments
     training: TrainingArg
 
-def parse_yaml(path: str) -> ConfigArgs:
+
+def _as_float(value):
+    return float(value)
+
+def parse_yaml(path: str):
     with open(path, "r", encoding="utf-8") as f:
         raw = yaml.safe_load(f)
+
+    model_raw = raw["model"]
+    training_raw = dict(raw["training"])
+    for key in [
+        "learning_rate",
+        "lr_qformer",
+        "lr_query_tokens",
+        "lr_projector",
+        "lr_lora",
+        "lr_other",
+    ]:
+        if key in training_raw and training_raw[key] is not None:
+            training_raw[key] = _as_float(training_raw[key])
 
     return ConfigArgs(
         global_=GlobalArguments(**raw["global_"]),
         model=ModelArguments(
-            base_model=raw["model"]["base_model"],
-            blip2_model=raw["model"]["blip2_model"],
-            lora=LoraArguments(**raw["model"]["lora"]),
+            base_model=model_raw["base_model"],
+            blip2_model=model_raw["blip2_model"],
+            lora=LoraArguments(**model_raw["lora"]),
+            qformer_stage1_dir=model_raw.get("qformer_stage1_dir"),
+            use_query_mixer=model_raw.get("use_query_mixer", False),
+            num_query_token=model_raw.get("num_query_token", 32),
+            cross_attention_freq=model_raw.get("cross_attention_freq", 2),
+            lavis_model_type=model_raw.get("lavis_model_type"),
+            train_query_tokens=model_raw.get("train_query_tokens", False),
         ),
         data=DataArguments(**raw["data"]),
-        training=TrainingArg(**raw["training"]),
+        training=TrainingArg(**training_raw),
     )
