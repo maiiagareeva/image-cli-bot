@@ -1,23 +1,49 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any, Dict, List
 import torch
 import json
 from src.utils import ensure_pil_rgb, extract_json, find_subsequence
+
+def _process_images(image_processor: Any, images):
+    if hasattr(image_processor, "__call__"):
+        try:
+            image_out = image_processor(images=images, return_tensors="pt")
+            if isinstance(image_out, dict):
+                return image_out["pixel_values"]
+            return image_out.pixel_values
+        except TypeError:
+            pass
+
+    pixel_values = [image_processor(image) for image in images]
+    return torch.stack(pixel_values, dim=0)
+
+
 @dataclass
 class DataCollator:
     tokenizer: Any
-    image_processor: Any
+    train_image_processor: Any
     max_prompt_len: int
     max_answer_len: int
+    eval_image_processor: Any | None = None
+    split: str = "train"
 
     disease_weight=8.0
     evidence_weight=3.0
     base_answer_weight=1.0
 
+    @property
+    def image_processor(self):
+        if self.split == "eval" and self.eval_image_processor is not None:
+            return self.eval_image_processor
+        return self.train_image_processor
+
+    def for_split(self, split: str):
+        return replace(self, split=split)
+
     def __call__(self, batch):
         images = [ensure_pil_rgb(x["image"]) for x in batch]
-        pixel_values = self.image_processor(images=images, return_tensors="pt").pixel_values
+        pixel_values = _process_images(self.image_processor, images)
 
         prompts = [x["prompt"] for x in batch]
         answers = [x["answer"] for x in batch]
@@ -52,7 +78,7 @@ class DataCollator:
             disease_id=-1
             obj=extract_json(ans_text)
             if isinstance(obj,dict):
-                d=obj.get('disease',None)
+                d=obj.get("disease",None)
                 if isinstance(d,str):
                     dl=d.strip().lower()
                     if "healthy" in dl:
@@ -62,7 +88,7 @@ class DataCollator:
                     elif "powdery" in dl:
                         disease_id = 2
                     else:
-                        disease_id = 3  # unknown
+                        disease_id = 3
                 try:
                     if isinstance(d,str) and len(a_ids)>0:
                         d_tok=self.tokenizer(d,add_special_tokens=False)["input_ids"]

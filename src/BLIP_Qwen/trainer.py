@@ -8,6 +8,8 @@ from src.metrics import build_compute_metrics
 def make_trainer(model, datasets, collator, train_cfg):
     train_ds = datasets.train_ds
     eval_ds = datasets.eval_ds
+    train_collator = collator.for_split("train") if hasattr(collator, "for_split") else collator
+    eval_collator = collator.for_split("eval") if hasattr(collator, "for_split") else collator
 
     kwargs = dict(
         output_dir=train_cfg.out_dir,
@@ -24,7 +26,6 @@ def make_trainer(model, datasets, collator, train_cfg):
         gradient_checkpointing=train_cfg.gradient_checkpointing,
         remove_unused_columns=False,
         dataloader_pin_memory=train_cfg.dataloader_pin_memory,
-        save_safetensors=train_cfg.save_safetensors,
         save_strategy=train_cfg.save_strategy,
         eval_delay=train_cfg.eval_delay,
         dataloader_drop_last=train_cfg.dataloader_drop_last,
@@ -37,6 +38,8 @@ def make_trainer(model, datasets, collator, train_cfg):
     )
 
     sig = inspect.signature(TrainingArguments.__init__).parameters
+    if "save_safetensors" in sig:
+        kwargs["save_safetensors"] = train_cfg.save_safetensors
     if eval_ds is None:
         if "eval_strategy" in sig:
             kwargs["eval_strategy"] = "no"
@@ -51,8 +54,13 @@ def make_trainer(model, datasets, collator, train_cfg):
             kwargs["eval_steps"] = train_cfg.eval_steps
 
     args = TrainingArguments(**kwargs)
+    args.lr_qformer = train_cfg.lr_qformer
+    args.lr_query_tokens = train_cfg.lr_query_tokens
+    args.lr_projector = train_cfg.lr_projector
+    args.lr_lora = train_cfg.lr_lora
+    args.lr_other = train_cfg.lr_other
 
-    tokenizer = collator.tokenizer
+    tokenizer = train_collator.tokenizer
     compute_metrics = build_compute_metrics(
         tokenizer,
         enable_metrics=train_cfg.enable_metrics,
@@ -63,7 +71,9 @@ def make_trainer(model, datasets, collator, train_cfg):
         args=args,
         train_dataset=train_ds,
         eval_dataset=eval_ds,
-        data_collator=collator,
+        data_collator=train_collator,
+        train_data_collator=train_collator,
+        eval_data_collator=eval_collator,
         compute_metrics=compute_metrics,
         tokenizer=tokenizer,
     )

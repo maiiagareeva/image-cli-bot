@@ -1,0 +1,14 @@
+{
+  "dataset": "qingwuuu/ngld-grape-leaf-vlm-w-img-without-diff-ref-v6",
+  "config": "default",
+  "split": "test",
+  "target_id": "2bb748772fd7f1e837b70214",
+  "sample_id": "2bb748772fd7f1e837b70214|teacher",
+  "image_id": "2bb748772fd7f1e837b70214",
+  "raw_disease_label": "Downy Mildew",
+  "normalized_disease_label": "Downy Mildew",
+  "data_source": "green_house_png_json",
+  "orig_image_name": "0009.jpg",
+  "orig_json_name": "0009.json",
+  "teacher_path": "C:\\Users\\qingw\\OneDrive\\文档\\GitHub\\image-cli-bot\\green_house_png_json\\0009.json"
+}
