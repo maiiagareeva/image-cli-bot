@@ -1,0 +1,55 @@
+===== BASIC INFO =====
+Date: Wed May  6 19:56:38 CDT 2026
+Hostname: ahl01
+Environment: localllm310_stage2
+Python path: /users/4/shen0574/.conda/envs/localllm310_stage2/bin/python
+Python 3.10.20
+Pip path: /users/4/shen0574/.conda/envs/localllm310_stage2/bin/pip
+pip 26.0.1 from /users/4/shen0574/.conda/envs/localllm310_stage2/lib/python3.10/site-packages/pip (python 3.10)
+conda 24.11.3
+
+===== CONDA PREFIX =====
+/users/4/shen0574/.conda/envs/localllm310_stage2
+
+===== CUDA / GPU INFO =====
+nvcc path:
+/usr/bin/which: no nvcc in (/users/4/shen0574/.conda/envs/localllm310_stage2/bin:/common/software/install/manual/miniforge3/24.3/condabin:/opt/msi/bin:/usr/share/Modules/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/opt/puppetlabs/bin)
+
+nvcc version:
+./export_two_envs.sh: line 42: nvcc: command not found
+
+nvidia-smi:
+./export_two_envs.sh: line 45: nvidia-smi: command not found
+
+===== IMPORTANT PYTHON PACKAGES =====
+Python executable: /users/4/shen0574/.conda/envs/localllm310_stage2/bin/python
+Python version: 3.10.20 | packaged by conda-forge | (main, Mar  5 2026, 16:42:22) [GCC 14.3.0]
+torch: 2.5.1+cu121
+torchvision: 0.20.1+cu121
+torchaudio: 2.5.1+cu121
+transformers: 5.5.3
+datasets: 4.8.4
+accelerate: 1.11.0
+peft: 0.18.0
+bitsandbytes: 0.49.1
+deepspeed: NOT INSTALLED
+fairscale: 0.4.4
+lavis: NOT INSTALLED
+salesforce-lavis: NOT INSTALLED
+huggingface_hub: 1.10.1
+tokenizers: 0.22.2
+numpy: 2.2.6
+pandas: 2.3.3
+scikit-learn: 1.7.2
+evaluate: 0.4.6
+Pillow: 11.3.0
+opencv-python: 4.13.0.92
+matplotlib: 3.10.8
+tqdm: 4.67.3
+safetensors: 0.6.2
+
+===== TORCH CUDA DETAILS =====
+torch.__version__: 2.5.1+cu121
+torch.cuda.is_available: False
+torch.version.cuda: 12.1
+torch.backends.cudnn.version: 90100

@@ -12,16 +12,16 @@ from src.BLIP_Qwen.qformer import BertConfig, BertLMHeadModel
 class BLIP2Model(nn.Module):
     def __init__(
         self,
-        blip2_model_id: str,
+        blip2_model_id,
         device,
         dtype=torch.float32,
-        qformer_stage1_dir: str | None = None,
-        num_query_token: int = 32,
-        cross_attention_freq: int = 2,
-        lavis_model_type: str | None = None,
-        freeze_vision: bool = True,
-        freeze_qformer: bool = False,
-        train_query_tokens: bool = False,
+        qformer_stage1_dir= None,
+        num_query_token = 32,
+        cross_attention_freq = 2,
+        lavis_model_type= None,
+        freeze_vision = True,
+        freeze_qformer = False,
+        train_query_tokens = False,
     ):
         super().__init__()
         self.blip2_model_id = blip2_model_id
@@ -46,9 +46,7 @@ class BLIP2Model(nn.Module):
         encoder_config.add_cross_attention = True
         encoder_config.cross_attention_freq = cross_attention_freq
         encoder_config.query_length = num_query_token
-        # LAVIS adds a single extra BOS token "[DEC]" on top of bert-base-uncased.
-        # Set the target vocab size up front so we don't rely on newer
-        # transformers tie-weight resize internals for this vendored model class.
+        #single extra BOS token "[DEC]" on top of bert-base-uncased
         encoder_config.vocab_size = 30523
         self.qformer = BertLMHeadModel.from_pretrained(
             "bert-base-uncased",
@@ -89,7 +87,7 @@ class BLIP2Model(nn.Module):
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
 
-    def load_stage1_qformer(self, stage1_dir: str, strict: bool = False):
+    def load_stage1_qformer(self, stage1_dir, strict= False):
         qformer_path = os.path.join(stage1_dir, "qformer_stage1.pt")
         query_tokens_path = os.path.join(stage1_dir, "query_tokens_stage1.pt")
         meta_path = os.path.join(stage1_dir, "stage1_meta.json")
@@ -103,26 +101,6 @@ class BLIP2Model(nn.Module):
 
         with open(meta_path, "r", encoding="utf-8") as f:
             meta = json.load(f)
-        if meta.get("lavis_model_type") != self.lavis_model_type:
-            raise ValueError(
-                f"Stage1 lavis_model_type={meta.get('lavis_model_type')} does not match "
-                f"stage2 lavis_model_type={self.lavis_model_type}."
-            )
-        if meta.get("num_query_token") != self.num_query_token:
-            raise ValueError(
-                f"Stage1 num_query_token={meta.get('num_query_token')} does not match "
-                f"stage2 num_query_token={self.num_query_token}."
-            )
-        if meta.get("cross_attention_freq") != self.cross_attention_freq:
-            raise ValueError(
-                f"Stage1 cross_attention_freq={meta.get('cross_attention_freq')} does not match "
-                f"stage2 cross_attention_freq={self.cross_attention_freq}."
-            )
-        if meta.get("qformer_hidden_size") != self.query_tokens.shape[-1]:
-            raise ValueError(
-                f"Stage1 qformer_hidden_size={meta.get('qformer_hidden_size')} does not match "
-                f"stage2 hidden_size={self.query_tokens.shape[-1]}."
-            )
 
         sd = torch.load(qformer_path, map_location=self.device)
         self.qformer.load_state_dict(sd, strict=strict)

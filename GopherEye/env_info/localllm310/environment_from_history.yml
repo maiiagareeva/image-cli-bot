@@ -1,0 +1,8 @@
+name: localllm310
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - libgcc-ng
+  - libstdcxx-ng
+prefix: /users/4/shen0574/.conda/envs/localllm310

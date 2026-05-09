@@ -1,0 +1,29 @@
+{
+  "disease": "Downy Mildew",
+  "leaf_morphology": {
+    "shape": "lobed",
+    "texture": "smooth",
+    "color_tones": [
+      "light green",
+      "yellow-green"
+    ]
+  },
+  "indicators": [
+    "Small, dark spots scattered across the leaf surface.",
+    "Chlorotic areas primarily near the leaf margins.",
+    "Interveinal chlorosis with some necrotic spots.",
+    "Vein-bounded chlorotic regions with darker centers.",
+    "Necrotic lesions more prevalent towards the leaf base.",
+    "Slight curling at the leaf edges.",
+    "Discoloration more intense near the midrib.",
+    "Scattered necrotic spots crossing the veins."
+  ],
+  "recommended_checks": [
+    "Inspect the abaxial surface for any fuzzy growth.",
+    "Check for moisture presence on the leaf surface in the morning.",
+    "Examine adjacent leaves for similar symptoms.",
+    "Assess the overall plant for wilting or stunted growth.",
+    "Look for any unusual odors or sticky residues."
+  ],
+  "evidence": "The observed leaf exhibits several distinct symptoms indicative of stress or infection. The adaxial surface shows small, dark spots distributed unevenly, with a higher concentration near the leaf margins. These spots are interspersed with chlorotic areas, primarily interveinal, suggesting a disruption in chlorophyll production. The presence of necrotic lesions, particularly towards the base of the leaf, indicates localized cell death, possibly due to pathogen activity. The chlorotic regions are often vein-bounded, with some necrotic spots crossing the veins, which could imply a spread of the condition beyond initial infection sites. Additionally, slight curling at the leaf edges and discoloration near the midrib suggest systemic involvement. The texture remains relatively smooth, but the color tones vary from light green to yellow-green, highlighting areas of compromised health. These visual indicators, combined with the spatial distribution of symptoms, provide a comprehensive overview of the leaf's condition."
+}

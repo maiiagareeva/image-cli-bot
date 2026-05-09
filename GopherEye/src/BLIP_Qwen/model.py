@@ -23,12 +23,12 @@ class QwenWithBLIPPrefix(nn.Module):
             return self.qwen.gradient_checkpointing_enable(
                 gradient_checkpointing_kwargs=gradient_checkpointing_kwargs
             )
-        raise AttributeError("Inner qwen model does not support gradient checkpointing.")
+        raise AttributeError("inner qwen model does not support gradient checkpointing")
 
     def gradient_checkpointing_disable(self):
         if hasattr(self.qwen, "gradient_checkpointing_disable"):
             return self.qwen.gradient_checkpointing_disable()
-        raise AttributeError("Inner qwen model does not support gradient checkpointing.")
+        raise AttributeError("inner qwen model does not support gradient checkpointing")
 
     def forward(self, input_ids, attention_mask, labels, pixel_values, **kwargs):
         device = input_ids.device
@@ -133,7 +133,7 @@ class QwenWithBLIPPrefix(nn.Module):
 def build_model(model_cfg, device, train_cfg):
     resolved_device = torch.device(device)
     if resolved_device.type != "cuda":
-        raise RuntimeError("Stage2 Qwen training currently requires CUDA.")
+        raise RuntimeError("Stage2 Qwen training requires CUDA.")
 
     if resolved_device.index is None:
         device_map = {"": "cuda:0"}
